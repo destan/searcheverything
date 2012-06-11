@@ -5,6 +5,7 @@
 #include <QString>
 
 #include "DatabaseManager.h"
+#include "Utils.h"
 
 sqlite3 *DatabaseManager::db;
 char* errorMessage;
@@ -18,7 +19,7 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName){
     return 0;
 }
 
-void DatabaseManager::writeIndexToDb(char *p_fileName, std::string fp)
+void DatabaseManager::writeIndexToDb(char *p_fileName, std::string fullPath)
 {
     char *zErrMsg = 0;
     int rc;
@@ -31,23 +32,28 @@ void DatabaseManager::writeIndexToDb(char *p_fileName, std::string fp)
     /*
         FIXME: make with pure std, without qt, use Utils::replace
     */
-    QString fileName(p_fileName);
-    fileName.replace("'", "''");
+    //    QString fileName(p_fileName);
+    //    fileName.replace("'", "''");
 
-    QString fullPath(fp.c_str());
-    fullPath.replace("'", "''");
+    //    QString fullPath(fp.c_str());
+    //    fullPath.replace("'", "''");
+
+    std::string fileName(p_fileName);
+    Utils::replace(fileName, "'", "''");
+    Utils::replace(fullPath, "'", "''");
+
     //----------------------
 
     int queryLength = 61 + fileName.length() + fullPath.length();
 
     char query[queryLength];
-//    query = (char*) malloc( sizeof(char) * queryLength );
+    //    query = (char*) malloc( sizeof(char) * queryLength );
 
-    int result = snprintf(query, sizeof(query)-1, "INSERT INTO fs_index(file_name, full_path) VALUES('%s', '%s');", fileName.toStdString().c_str(), fullPath.toStdString().c_str());
-//    qDebug(query);
+    int result = snprintf(query, sizeof(query)-1, "INSERT INTO fs_index(file_name, full_path) VALUES('%s', '%s');", fileName.c_str(), fullPath.c_str());
+    //    qDebug(query);
     rc = sqlite3_exec(db, query, callback, 0, &zErrMsg);
 
-//    free (query);
+    //    free (query);
 
     if( rc!=SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
@@ -58,7 +64,7 @@ void DatabaseManager::writeIndexToDb(char *p_fileName, std::string fp)
 
 void DatabaseManager::initDb()
 {
-        // Open Database
+    // Open Database
     int rc = sqlite3_open("database", &db);
     if( rc ){
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -95,7 +101,7 @@ void DatabaseManager::closeDb()
 {
     // Commit transaction and close database
     sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, &errorMessage);
-//    sqlite3_free(errorMessage);
+    //    sqlite3_free(errorMessage);
     sqlite3_close(db);
 }
 

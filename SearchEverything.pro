@@ -5,14 +5,13 @@
 #-------------------------------------------------
 
 QT       += core gui
-CONFIG += console
+CONFIG   += console
 LIBS     += -lsqlite3
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = SearchEverything
 TEMPLATE = app
-
 
 SOURCES += main.cpp\
         SearchWindow.cpp \
