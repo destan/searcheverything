@@ -29,15 +29,15 @@ void InotifyManager::initNotify()
     }
 }
 
-void InotifyManager::addToWatch(char path[])
+int InotifyManager::addToWatch(char path[])
 {
 //    qDebug() << "ADDING PATH TO WATCH " << path;
     /*adding the “/tmp” directory into watch list. Here, the suggestion is to validate the existence of the directory before adding into monitoring list.*/
     int wd = inotify_add_watch( s_fd, path, IN_CREATE | IN_DELETE | IN_MODIFY );
     if(wd < 0){
-        qCritical() << "ERROR ADDING WATCH FOR " << path;
+        qCritical() <<" ERROR ADDING WATCH FOR " << path << " with error:" << strerror(errno);
     }
-
+    return wd;
 }
 
 void InotifyManager::startWatching()

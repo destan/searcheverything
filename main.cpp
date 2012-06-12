@@ -14,17 +14,17 @@ int main(int argc, char *argv[])
 
     clock_t begin = clock();
     //----------------------------------------------
-    //    DatabaseManager::initDb();
-    //    FileSystemIndexer::indexPath("/", 0);
-    //    DatabaseManager::closeDb();
+//        DatabaseManager::initDb();
+//        FileSystemIndexer::indexPath("/home/destan", 0);
+//        DatabaseManager::closeDb();
     //----------------------------------------------
     //    DatabaseManager::search("cevirgec");
     //----------------------------------------------
-    //    InotifyManager::initNotify();
-    //    DatabaseManager::initDb();
-    //    FileSystemIndexer::indexPath("/home/destan", 0);
-    //    DatabaseManager::closeDb();
-    //    InotifyManager::startWatching();
+        InotifyManager::initNotify();
+        DatabaseManager::initDb();
+        FileSystemIndexer::indexPath("/home/destan", 0);
+        DatabaseManager::closeDb();
+        InotifyManager::startWatching();
     //----------------------------------------------
 
     clock_t end = clock();
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     //    qDebug() << text.c_str();
 
 
-    SearchWindow::showIt();
+//    SearchWindow::showIt();
 
     return a.exec();
 }

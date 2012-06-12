@@ -14,34 +14,35 @@
 int FileSystemIndexer::totalDirs = 0;
 int FileSystemIndexer::totalFiles = 0;
 
-void FileSystemIndexer::indexPath(char* name, int level)
+void FileSystemIndexer::indexPath(char* path, int level)
 {
     DIR *dir;
     struct dirent *entry;
 
-    if (!(dir = opendir(name)))
+    if (!(dir = opendir(path)))
         return;
     if (!(entry = readdir(dir)))
         return;
 
     do {
         if (entry->d_type == DT_DIR) {
-            char path[3000];//FIXME make dynamic
-            int len = snprintf(path, sizeof(path)-1, "%s/%s", name, entry->d_name);
+            char childPath[3000];//FIXME make dynamic
+            int len = snprintf(childPath, sizeof(childPath)-1, "%s/%s", path, entry->d_name);
 
 
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0){
                 continue;
             }
-            InotifyManager::addToWatch(path);
-            //            qDebug("%*s[%s]\n", level*2, "", entry->d_name);
+            int watchDescriptor = InotifyManager::addToWatch(childPath);
+            DatabaseManager::addToWatchList(watchDescriptor, childPath);
+
             ++totalDirs;
-            FileSystemIndexer::indexPath(path, level + 1);
+            FileSystemIndexer::indexPath(childPath, level + 1);
         }
         else if(entry->d_type == DT_REG){
             ++totalFiles;
-            //            qDebug("%*s- %s\n", level*2, "", entry->d_name);
-            DatabaseManager::addToIndex(entry->d_name, std::string(name).append(entry->d_name));
+
+            DatabaseManager::addToIndex(entry->d_name, path, std::string(path).append("/").append(entry->d_name));
         }
     } while ((entry = readdir(dir)));
     closedir(dir);
