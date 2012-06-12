@@ -10,7 +10,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    //    QApplication::setQuitOnLastWindowClosed(false);
+    QApplication::setQuitOnLastWindowClosed(false);
 
     clock_t begin = clock();
     //----------------------------------------------
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     //    qDebug() << text.c_str();
 
 
-    //    SearchWindow::showIt();
+    SearchWindow::showIt();
 
     return a.exec();
 }

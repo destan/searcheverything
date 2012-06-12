@@ -14,7 +14,7 @@ class DatabaseManager
         static void removeFromIndex(char* p_fileName, std::string fullPath);
 
         static void addToWatchList(int watchId, const char* p_path);
-        static void removeFromIndex(const char* p_path);
+        static void removeFromWatchList(const char* p_path);
 
         static std::string getPathByWatchId(int watchId);
 
