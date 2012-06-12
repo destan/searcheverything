@@ -1,9 +1,10 @@
 #include "SearchWindow.h"
 #include "ui_SearchWindow.h"
 
-SearchWindow::SearchWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::SearchWindow)
+#include "DatabaseManager.h"
+#include <QDebug>
+
+SearchWindow::SearchWindow(QWidget *parent) : QMainWindow(parent),  ui(new Ui::SearchWindow)
 {
     ui->setupUi(this);
 }
@@ -22,5 +23,18 @@ void SearchWindow::changeEvent(QEvent *e)
             break;
         default:
             break;
+    }
+}
+
+void SearchWindow::on_lineEditSearch_textEdited(const QString &searchKey)
+{
+    getInstance()->ui->plainTextEdit->clear();
+    DatabaseManager::search(searchKey.toStdString().c_str());
+}
+
+void SearchWindow::updateResults(QStringList resultList)
+{
+    foreach (QString line, resultList) {
+        getInstance()->ui->plainTextEdit->appendPlainText(line);
     }
 }

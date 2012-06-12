@@ -20,11 +20,11 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     //    DatabaseManager::search("cevirgec");
     //----------------------------------------------
-    InotifyManager::initNotify();
-    DatabaseManager::initDb();
-    FileSystemIndexer::indexPath("/home/destan", 0);
-    DatabaseManager::closeDb();
-    InotifyManager::startWatching();
+    //    InotifyManager::initNotify();
+    //    DatabaseManager::initDb();
+    //    FileSystemIndexer::indexPath("/home/destan", 0);
+    //    DatabaseManager::closeDb();
+    //    InotifyManager::startWatching();
     //----------------------------------------------
 
     clock_t end = clock();
@@ -38,9 +38,7 @@ int main(int argc, char *argv[])
     //    qDebug() << text.c_str();
 
 
-    //    SearchWindow w;
-    //    w.show();
+    SearchWindow::showIt();
 
-    //    return a.exec();
-    return 0;
+    return a.exec();
 }

@@ -10,15 +10,32 @@ class SearchWindow;
 class SearchWindow : public QMainWindow
 {
         Q_OBJECT
-        
+
     public:
-        explicit SearchWindow(QWidget *parent = 0);
+        static SearchWindow* getInstance(){
+            static SearchWindow* instance = new SearchWindow();
+            return instance;
+        }
+
+        static int showIt(){
+            getInstance()->show();
+        }
+
+        static void updateResults(QStringList resultList);
+
         ~SearchWindow();
-        
+
     protected:
         void changeEvent(QEvent *e);
-        
+
+    private slots:
+        void on_lineEditSearch_textEdited(const QString &searchKey);
+
     private:
+        explicit SearchWindow(QWidget *parent = 0);// Hide to ensure singleton pattern
+        SearchWindow(const SearchWindow&);// Hide to ensure singleton pattern
+        void operator =(const SearchWindow& ); // Hide and don't implement to ensure singleton pattern
+
         Ui::SearchWindow *ui;
 };
 

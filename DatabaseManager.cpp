@@ -3,9 +3,11 @@
 #include <stdio.h>
 
 #include <QString>
+#include <QDebug>
 
 #include "DatabaseManager.h"
 #include "Utils.h"
+#include "SearchWindow.h"
 
 sqlite3 *DatabaseManager::db;
 char* errorMessage;
@@ -21,10 +23,13 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName){
 
 static int searchCallback(void *NotUsed, int argc, char **argv, char **azColName){
     int i;
+    QStringList resultList;
     for(i=0; i<argc; i++){
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+//        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+        resultList.append(argv[i]);
     }
-    printf("\n");
+
+    SearchWindow::updateResults(resultList);
 
     return 0;
 }
