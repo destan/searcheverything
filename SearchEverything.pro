@@ -17,11 +17,13 @@ SOURCES += main.cpp\
         SearchWindow.cpp \
     FileSystemIndexer.cpp \
     DatabaseManager.cpp \
-    Utils.cpp
+    Utils.cpp \
+    InotifyManager.cpp
 
 HEADERS  += SearchWindow.h \
     FileSystemIndexer.h \
     DatabaseManager.h \
-    Utils.h
+    Utils.h \
+    InotifyManager.h
 
 FORMS    += SearchWindow.ui

@@ -19,7 +19,17 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName){
     return 0;
 }
 
-void DatabaseManager::writeIndexToDb(char *p_fileName, std::string fullPath)
+static int searchCallback(void *NotUsed, int argc, char **argv, char **azColName){
+    int i;
+    for(i=0; i<argc; i++){
+        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+    }
+    printf("\n");
+
+    return 0;
+}
+
+void DatabaseManager::addToIndex(char *p_fileName, std::string fullPath)
 {
     char *zErrMsg = 0;
     int rc;
@@ -113,3 +123,28 @@ void DatabaseManager::closeDb()
 //    // printf("\n");
 //    return 0;
 //}
+
+
+void DatabaseManager::search(std::string fullPath)
+{
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+
+    Utils::replace(fullPath, "'", "''");
+    char query[ fullPath.length() + 57 ];
+    snprintf(query, sizeof(query)-1, "SELECT full_path FROM fs_index WHERE file_name MATCH '%s';", fullPath.c_str());
+
+    rc = sqlite3_open("database", &db);
+    if( rc ){
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    rc = sqlite3_exec(db, query, searchCallback, 0, &zErrMsg);
+    if( rc!=SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    }
+    sqlite3_close(db);
+}

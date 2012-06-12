@@ -7,7 +7,9 @@
 class DatabaseManager
 {
     public:
-        static void writeIndexToDb(char* p_fileName, std::string fullPath);
+        static void addToIndex(char *p_fileName, std::string fullPath);
+        static void removeFromIndex(char* p_fileName, std::string fullPath);
+        static void search(std::string fullPath);
         static void initDb();
         static void closeDb();
 
