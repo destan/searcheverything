@@ -7,6 +7,7 @@
 #include <QDebug>
 
 #include "InotifyManager.h"
+#include "DatabaseManager.h"
 
 #define EVENT_SIZE  ( sizeof (struct inotify_event) )
 #define EVENT_BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
@@ -62,23 +63,29 @@ void InotifyManager::startWatching()
 
         struct inotify_event *event = ( struct inotify_event * ) &buffer[ i ];
 
-        qDebug() << "Le event " << QString::number(event->mask);
-
         if ( event->len ) {
             if ( event->mask & IN_CREATE ) {
                 if ( event->mask & IN_ISDIR ) {
                     qDebug( "New directory %s created.\n", event->name );
+                    qDebug() << event->wd;
+                    qDebug() << DatabaseManager::getPathByWatchId(event->wd).c_str();
                 }
                 else {
                     qDebug( "New file %s created.\n", event->name );
+                    qDebug() << event->wd;
+                    qDebug() << DatabaseManager::getPathByWatchId(event->wd).c_str();
                 }
             }
             else if ( event->mask & IN_DELETE ) {
                 if ( event->mask & IN_ISDIR ) {
                     qDebug( "Directory %s deleted.\n", event->name );
+                    qDebug() << event->wd;
+                    qDebug() << DatabaseManager::getPathByWatchId(event->wd).c_str();
                 }
                 else {
                     qDebug( "File %s deleted.\n", event->name );
+                    qDebug() << event->wd;
+                    qDebug() << DatabaseManager::getPathByWatchId(event->wd).c_str();
                 }
             }
         }

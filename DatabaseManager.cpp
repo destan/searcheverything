@@ -25,7 +25,7 @@ static int searchCallback(void *NotUsed, int argc, char **argv, char **azColName
     int i;
     QStringList resultList;
     for(i=0; i<argc; i++){
-//        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+        //        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
         resultList.append(argv[i]);
     }
 
@@ -33,6 +33,19 @@ static int searchCallback(void *NotUsed, int argc, char **argv, char **azColName
 
     return 0;
 }
+
+//static int getPathByWatchIdCallback(void *NotUsed, int argc, char **argv, char **azColName){
+//    int i;
+//    QStringList resultList;
+//    for(i=0; i<argc; i++){
+//        //        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+//        resultList.append(argv[i]);
+//    }
+
+//    SearchWindow::updateResults(resultList);
+
+//    return 0;
+//}
 
 void DatabaseManager::addToIndex(char *p_fileName, char *p_path, std::string fullPath)
 {
@@ -76,9 +89,9 @@ void DatabaseManager::addToWatchList(int watchId, const char *p_path)
     //FIXME
     std::string q = "INSERT INTO fs_folders(watch_id, full_path) VALUES(" + QString::number(watchId).toStdString() +", '" + path + "');";
 
-//    char query[queryLength];
+    //    char query[queryLength];
 
-//    int result = snprintf(query, sizeof(query)-1, , watchId, fullPath.c_str());
+    //    int result = snprintf(query, sizeof(query)-1, , watchId, fullPath.c_str());
     rc = sqlite3_exec(db, q.c_str(), callback, 0, &zErrMsg);
 
     if( rc!=SQLITE_OK ){
@@ -129,18 +142,9 @@ void DatabaseManager::closeDb()
 {
     // Commit transaction and close database
     sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, &errorMessage);
-    //    sqlite3_free(errorMessage);
+    sqlite3_free(errorMessage);
     sqlite3_close(db);
 }
-
-//int callback(void *NotUsed, int argc, char **argv, char **azColName){
-//    // int i;
-//    // for(i=0; i<argc; i++){
-//    //   printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-//    // }
-//    // printf("\n");
-//    return 0;
-//}
 
 
 void DatabaseManager::search(std::string fullPath)
@@ -165,4 +169,25 @@ void DatabaseManager::search(std::string fullPath)
         sqlite3_free(zErrMsg);
     }
     sqlite3_close(db);
+}
+
+
+std::string DatabaseManager::getPathByWatchId(int watchId)
+{
+    sqlite3_stmt * stmt;
+    char *sql = "SELECT * FROM fs_folders where watch_id=1";
+    sqlite3_prepare_v2(db, sql, strlen (sql) + 1, & stmt, NULL);
+    int s = sqlite3_step (stmt);
+
+    qDebug() << "S: " << QString::number(s);
+
+    if (s == SQLITE_ROW) {
+        int bytes;
+        const unsigned char * text;
+        bytes = sqlite3_column_int(stmt, 0);
+        text  = sqlite3_column_text (stmt, 1);
+//        qDebug("bunlar: %d: %s\n", bytes, text);
+        return reinterpret_cast<const char*>(text);
+    }
+    return "NO PATH";
 }

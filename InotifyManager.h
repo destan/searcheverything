@@ -12,11 +12,9 @@ class InotifyManager : public QObject
         static void initNotify();
         static int addToWatch(char path[]);
         static void startWatching();
+
+    private:
         static int s_fd;
-
-    signals:
-
-    public slots:
 
 };
 
