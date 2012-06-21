@@ -166,16 +166,17 @@ void DatabaseManager::search(std::string fullPath)
 
 std::string DatabaseManager::getPathByWatchId(int watchId)
 {
+    char query[50];
+    int length = sprintf(query, "SELECT * FROM fs_folders where watch_id=%d", watchId);
     sqlite3_stmt * stmt;
-    const char *sql = QString("SELECT * FROM fs_folders where watch_id=").append(QString::number(watchId)).toStdString().c_str();
-    sqlite3_prepare_v2(db, sql, strlen (sql) + 1, & stmt, NULL);
+
+    sqlite3_prepare_v2(db, query, length, & stmt, NULL);
     int s = sqlite3_step (stmt);
 
-    qDebug() << "S: " << QString::number(s);
+    qDebug() << "@DatabaseManager::getPathByWatchId: s:" << QString::number(s) ;
 
     if (s == SQLITE_ROW) {
         const unsigned char * text = sqlite3_column_text (stmt, 1);
-//        qDebug("bunlar: %d: %s\n", bytes, text);
         return reinterpret_cast<const char*>(text);
     }
     return "NO PATH";
