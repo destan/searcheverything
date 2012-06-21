@@ -3,10 +3,18 @@
 
 #include "DatabaseManager.h"
 #include <QDebug>
+#include <QTimer>
+
+static QTimer *timer;
+QString SearchWindow::searchKey;
 
 SearchWindow::SearchWindow(QWidget *parent) : QMainWindow(parent),  ui(new Ui::SearchWindow)
 {
     ui->setupUi(this);
+
+    timer = new QTimer(this);
+    timer->setSingleShot(true);
+    connect(timer, SIGNAL(timeout()), this, SLOT(triggerSearch()));
 }
 
 SearchWindow::~SearchWindow()
@@ -29,11 +37,18 @@ void SearchWindow::changeEvent(QEvent *e)
 void SearchWindow::on_lineEditSearch_textEdited(const QString &searchKey)
 {
     getInstance()->ui->plainTextEdit->clear();
+    SearchWindow::searchKey = searchKey;
 
     if(!searchKey.isEmpty() && searchKey.length() > 1){
-        //FIXME: implement timeout
-        DatabaseManager::search(searchKey.toStdString().c_str());
+        qDebug("reset timer");
+        timer->start(700);
     }
+}
+
+void SearchWindow::triggerSearch()
+{
+    qDebug("timeout");
+    DatabaseManager::search(SearchWindow::searchKey.toStdString().c_str());
 }
 
 void SearchWindow::updateResults(QStringList resultList)

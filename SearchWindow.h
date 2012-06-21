@@ -30,11 +30,14 @@ class SearchWindow : public QMainWindow
 
     private slots:
         void on_lineEditSearch_textEdited(const QString &searchKey);
+        void triggerSearch();
 
     private:
         explicit SearchWindow(QWidget *parent = 0);// Hide to ensure singleton pattern
         SearchWindow(const SearchWindow&);// Hide to ensure singleton pattern
         void operator =(const SearchWindow& ); // Hide and don't implement to ensure singleton pattern
+
+        static QString searchKey;
 
         Ui::SearchWindow *ui;
 };

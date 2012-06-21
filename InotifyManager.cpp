@@ -64,9 +64,9 @@ void InotifyManager::startWatching()
         int i=0;
 
         /*read to determine the event change happens on “/tmp” directory. Actually this read blocks until the change event occurs*/
-        qDebug() << "READING...";
+//        qDebug() << "READING...";
         length = read( s_fd, buffer, EVENT_BUF_LEN );
-        qDebug() << "READ...";
+//        qDebug() << "READ...";
 
         if(shallStop){
             break;
