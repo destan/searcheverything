@@ -8,6 +8,7 @@
 #include "DatabaseManager.h"
 #include "Utils.h"
 #include "SearchWindow.h"
+#include "InotifyManager.h"
 
 sqlite3 *DatabaseManager::db;
 char* errorMessage;
@@ -111,8 +112,7 @@ void DatabaseManager::initDb()
         return ;
     }
 
-    //Create databse
-    //"CREATE VIRTUAL TABLE fs_index.db USING fts4(file_name TEXT, full_path TEXT);"
+    //Create databses
     sqlite3_exec(db, "CREATE VIRTUAL TABLE fs_index USING fts4(file_name TEXT, path TEXT, full_path TEXT);", NULL, NULL, &errorMessage);
 
     sqlite3_exec(db, "CREATE TABLE fs_folders (watch_id INTEGER, full_path TEXT);", NULL, NULL, &errorMessage);
@@ -149,7 +149,6 @@ void DatabaseManager::closeDb()
 
 void DatabaseManager::search(std::string fullPath)
 {
-    sqlite3 *db;
     char *zErrMsg = 0;
     int rc;
 
@@ -157,18 +156,11 @@ void DatabaseManager::search(std::string fullPath)
     char query[ fullPath.length() + 57 ];
     snprintf(query, sizeof(query)-1, "SELECT full_path FROM fs_index WHERE file_name MATCH '%s';", fullPath.c_str());
 
-    rc = sqlite3_open("database", &db);
-    if( rc ){
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return;
-    }
     rc = sqlite3_exec(db, query, searchCallback, 0, &zErrMsg);
     if( rc!=SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
     }
-    sqlite3_close(db);
 }
 
 
@@ -187,4 +179,20 @@ std::string DatabaseManager::getPathByWatchId(int watchId)
         return reinterpret_cast<const char*>(text);
     }
     return "NO PATH";
+}
+
+void DatabaseManager::bindToAllIndexedFolders()
+{
+    sqlite3_stmt * stmt;
+    const char *sql = "SELECT distinct full_path FROM fs_folders";
+    sqlite3_prepare_v2(db, sql, strlen (sql) + 1, & stmt, NULL);
+    int s = sqlite3_step (stmt);
+
+    while (s == SQLITE_ROW) {
+        const unsigned char * text = sqlite3_column_text (stmt, 0);
+        qDebug("adding to watch: %s\n", text);
+        InotifyManager::addToWatch(reinterpret_cast<const char*>(text));
+
+        s = sqlite3_step (stmt);
+    }
 }

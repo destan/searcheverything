@@ -17,7 +17,7 @@ class SearchWindow : public QMainWindow
             return instance;
         }
 
-        static int showIt(){
+        static void showIt(){
             getInstance()->show();
         }
 

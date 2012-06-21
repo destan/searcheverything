@@ -10,11 +10,15 @@ class InotifyManager : public QObject
         explicit InotifyManager(QObject *parent = 0);
 
         static void initNotify();
-        static int addToWatch(char path[]);
+        static int addToWatch(const char path[]);
         static void startWatching();
+        static void stopWatching();
 
     private:
+        static void getWatchlistFromDBAndBind();
+
         static int s_fd;
+        static bool shallStop;
 
 };
 

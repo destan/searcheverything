@@ -17,6 +17,7 @@ class DatabaseManager
         static void removeFromWatchList(const char* p_path);
 
         static std::string getPathByWatchId(int watchId);
+        static void bindToAllIndexedFolders();
 
         static void search(std::string fullPath);
 

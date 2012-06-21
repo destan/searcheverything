@@ -8,11 +8,13 @@
 
 #include "InotifyManager.h"
 #include "DatabaseManager.h"
+#include "FileSystemIndexer.h"
 
 #define EVENT_SIZE  ( sizeof (struct inotify_event) )
 #define EVENT_BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
 
 int InotifyManager::s_fd;
+bool InotifyManager::shallStop = false;
 
 InotifyManager::InotifyManager(QObject *parent) :
     QObject(parent)
@@ -28,12 +30,17 @@ void InotifyManager::initNotify()
     if ( s_fd < 0 ) {
         perror( "inotify_init" );
     }
+
+    if( FileSystemIndexer::isIndexingDone ){
+        getWatchlistFromDBAndBind();
+    }
 }
 
-int InotifyManager::addToWatch(char path[])
+int InotifyManager::addToWatch(const char path[])
 {
 //    qDebug() << "ADDING PATH TO WATCH " << path;
-    /*adding the “/tmp” directory into watch list. Here, the suggestion is to validate the existence of the directory before adding into monitoring list.*/
+
+    /* Here, the suggestion is to validate the existence of the directory before adding into monitoring list.*/
     int wd = inotify_add_watch( s_fd, path, IN_CREATE | IN_DELETE | IN_MODIFY );
     if(wd < 0){
         qCritical() <<" ERROR ADDING WATCH FOR " << path << " with error:" << strerror(errno);
@@ -49,12 +56,21 @@ void InotifyManager::startWatching()
 
     /*actually read return the list of change events happens. Here, read the change event one by one and process it accordingly.*/
     forever {
+
+        if(shallStop){
+            break;
+        }
+
         int i=0;
 
         /*read to determine the event change happens on “/tmp” directory. Actually this read blocks until the change event occurs*/
         qDebug() << "READING...";
         length = read( s_fd, buffer, EVENT_BUF_LEN );
         qDebug() << "READ...";
+
+        if(shallStop){
+            break;
+        }
 
         /*checking for error*/
         if ( length < 0 ) {
@@ -91,11 +107,20 @@ void InotifyManager::startWatching()
         }
         i += EVENT_SIZE + event->len;
     }
+
     /*removing the “/tmp” directory from the watch list.*/
 //    inotify_rm_watch( s_fd, wd );
 
     /*closing the INOTIFY instance*/
     close( s_fd );
-    printf( "BITTI... ");
+}
 
+void InotifyManager::stopWatching()
+{
+    shallStop = true;
+}
+
+void InotifyManager::getWatchlistFromDBAndBind()
+{
+    DatabaseManager::bindToAllIndexedFolders();
 }

@@ -13,6 +13,7 @@
 
 int FileSystemIndexer::totalDirs = 0;
 int FileSystemIndexer::totalFiles = 0;
+bool FileSystemIndexer::isIndexingDone = false;
 
 void FileSystemIndexer::indexPath(char* path, int level)
 {
@@ -25,7 +26,7 @@ void FileSystemIndexer::indexPath(char* path, int level)
         return;
 
     do {
-        if (entry->d_type == DT_DIR) {
+        if (entry->d_type == DT_DIR) {//is a directory
             char childPath[3000];//FIXME make dynamic
             int len = snprintf(childPath, sizeof(childPath)-1, "%s/%s", path, entry->d_name);
 
@@ -39,7 +40,7 @@ void FileSystemIndexer::indexPath(char* path, int level)
             ++totalDirs;
             FileSystemIndexer::indexPath(childPath, level + 1);
         }
-        else if(entry->d_type == DT_REG){
+        else if(entry->d_type == DT_REG){//is a file
             ++totalFiles;
 
             DatabaseManager::addToIndex(entry->d_name, path, std::string(path).append("/").append(entry->d_name));

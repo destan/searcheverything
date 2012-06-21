@@ -29,7 +29,11 @@ void SearchWindow::changeEvent(QEvent *e)
 void SearchWindow::on_lineEditSearch_textEdited(const QString &searchKey)
 {
     getInstance()->ui->plainTextEdit->clear();
-    DatabaseManager::search(searchKey.toStdString().c_str());
+
+    if(!searchKey.isEmpty() && searchKey.length() > 1){
+        //FIXME: implement timeout
+        DatabaseManager::search(searchKey.toStdString().c_str());
+    }
 }
 
 void SearchWindow::updateResults(QStringList resultList)
