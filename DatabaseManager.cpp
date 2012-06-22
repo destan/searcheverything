@@ -173,7 +173,7 @@ std::string DatabaseManager::getPathByWatchId(int watchId)
     sqlite3_prepare_v2(db, query, length, & stmt, NULL);
     int s = sqlite3_step (stmt);
 
-    qDebug() << "@DatabaseManager::getPathByWatchId: s:" << QString::number(s) ;
+//    qDebug() << "@DatabaseManager::getPathByWatchId: s:" << QString::number(s) ;
 
     if (s == SQLITE_ROW) {
         const unsigned char * text = sqlite3_column_text (stmt, 1);
@@ -191,7 +191,7 @@ void DatabaseManager::bindToAllIndexedFolders()
 
     while (s == SQLITE_ROW) {
         const unsigned char * text = sqlite3_column_text (stmt, 0);
-        qDebug("adding to watch: %s\n", text);
+//        qDebug("adding to watch: %s\n", text);
         InotifyManager::addToWatch(reinterpret_cast<const char*>(text));
 
         s = sqlite3_step (stmt);
