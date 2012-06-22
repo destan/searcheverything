@@ -19,6 +19,11 @@ bool InotifyManager::shallStop = false;
 InotifyManager::InotifyManager(QObject *parent) :
     QObject(parent)
 {
+
+    connect(this, SIGNAL(fileCreated(std::string)), this, SLOT(handleFileCreated(std::string)));
+    connect(this, SIGNAL(fileDeleted(std::string)), this, SLOT(handleFileDeleted(std::string)));
+    connect(this, SIGNAL(folderCreated(std::string)), this, SLOT(handleFolderCreated(std::string)));
+    connect(this, SIGNAL(folderDeleted(std::string)), this, SLOT(handleFolderDeleted(std::string)));
 }
 
 void InotifyManager::initNotify()
@@ -63,10 +68,8 @@ void InotifyManager::startWatching()
 
         int i=0;
 
-        /*read to determine the event change happens on “/tmp” directory. Actually this read blocks until the change event occurs*/
-//        qDebug() << "READING...";
+        /* This read blocks until the change event occurs*/
         length = read( s_fd, buffer, EVENT_BUF_LEN );
-//        qDebug() << "READ...";
 
         if(shallStop){
             break;
@@ -85,11 +88,20 @@ void InotifyManager::startWatching()
                     qDebug( "New directory %s created.\n", event->name );
                     qDebug() << event->wd;
                     qDebug() << DatabaseManager::getPathByWatchId(event->wd).c_str();
+
+                    std::string path = DatabaseManager::getPathByWatchId(event->wd);
+                    path.append("/").append(event->name);
+                    emit(getInstance()->folderCreated(path));
                 }
                 else {
                     qDebug( "New file %s created.\n", event->name );
                     qDebug() << event->wd;
                     qDebug() << DatabaseManager::getPathByWatchId(event->wd).c_str();
+
+
+                    std::string path = DatabaseManager::getPathByWatchId(event->wd);
+                    path.append("/").append(event->name);
+                    emit(getInstance()->fileCreated(path));
                 }
             }
             else if ( event->mask & IN_DELETE ) {
@@ -97,11 +109,19 @@ void InotifyManager::startWatching()
                     qDebug( "Directory %s deleted.\n", event->name );
                     qDebug() << event->wd;
                     qDebug() << DatabaseManager::getPathByWatchId(event->wd).c_str();
+
+                    std::string path = DatabaseManager::getPathByWatchId(event->wd);
+                    path.append("/").append(event->name);
+                    emit(getInstance()->folderDeleted(path));
                 }
                 else {
                     qDebug( "File %s deleted.\n", event->name );
                     qDebug() << event->wd;
                     qDebug() << DatabaseManager::getPathByWatchId(event->wd).c_str();
+
+                    std::string path = DatabaseManager::getPathByWatchId(event->wd);
+                    path.append("/").append(event->name);
+                    emit(getInstance()->fileDeleted(path));
                 }
             }
         }
@@ -123,4 +143,25 @@ void InotifyManager::stopWatching()
 void InotifyManager::getWatchlistFromDBAndBind()
 {
     DatabaseManager::bindToAllIndexedFolders();
+}
+
+
+void InotifyManager::handleFileDeleted(std::string fullPath)
+{
+    qDebug() << "InotifyManager::handleFileDeleted" << fullPath.c_str();
+}
+
+void InotifyManager::handleFileCreated(std::string fullPath)
+{
+    qDebug() << "InotifyManager::handleFileCreated" << fullPath.c_str();
+}
+
+void InotifyManager::handleFolderDeleted(std::string fullPath)
+{
+    qDebug() << "InotifyManager::handleFolderDeleted" << fullPath.c_str();
+}
+
+void InotifyManager::handleFolderCreated(std::string fullPath)
+{
+    qDebug() << "InotifyManager::handleFolderCreated" << fullPath.c_str();
 }
