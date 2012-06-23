@@ -20,16 +20,21 @@ void FileSystemIndexer::indexPath(char* path, int level)
     DIR *dir;
     struct dirent *entry;
 
-    if (!(dir = opendir(path)))
+    if (!(dir = opendir(path))){
         return;
-    if (!(entry = readdir(dir)))
+    }
+
+    int wd = InotifyManager::addToWatch(path);
+    DatabaseManager::addToWatchList(wd, path);
+
+    if (!(entry = readdir(dir))){
         return;
+    }
 
     do {
         if (entry->d_type == DT_DIR) {//is a directory
             char childPath[3000];//FIXME make dynamic
             int len = snprintf(childPath, sizeof(childPath)-1, "%s/%s", path, entry->d_name);
-
 
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0){
                 continue;
@@ -42,7 +47,6 @@ void FileSystemIndexer::indexPath(char* path, int level)
         }
         else if(entry->d_type == DT_REG){//is a file
             ++totalFiles;
-
             DatabaseManager::addToIndex(entry->d_name, path, std::string(path).append("/").append(entry->d_name));
         }
     } while ((entry = readdir(dir)));

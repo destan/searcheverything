@@ -21,13 +21,13 @@ class InotifyManager : public QObject
     signals:
         void fileDeleted(std::string fullPath);
         void fileCreated(std::string fullPath);
-        void folderDeleted(std::string fullPath);
+        void folderDeleted(std::string fullPath, int wd);
         void folderCreated(std::string fullPath);
 
     private slots:
         void handleFileDeleted(std::string fullPath);
         void handleFileCreated(std::string fullPath);
-        void handleFolderDeleted(std::string fullPath);
+        void handleFolderDeleted(std::string fullPath, int wd);
         void handleFolderCreated(std::string fullPath);
 
     private:

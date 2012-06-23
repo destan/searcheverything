@@ -48,7 +48,7 @@ static int searchCallback(void *NotUsed, int argc, char **argv, char **azColName
 //    return 0;
 //}
 
-void DatabaseManager::addToIndex(char *p_fileName, char *p_path, std::string fullPath)
+void DatabaseManager::addToIndex(const char *p_fileName, const char *p_path, std::string fullPath)
 {
     char *zErrMsg = 0;
     int rc;
@@ -64,17 +64,31 @@ void DatabaseManager::addToIndex(char *p_fileName, char *p_path, std::string ful
     int queryLength = 71 + fileName.length() + path.length() + fullPath.length();
 
     char query[queryLength];
-    //    query = (char*) malloc( sizeof(char) * queryLength );
 
     int result = snprintf(query, sizeof(query)-1, "INSERT INTO fs_index(file_name, path, full_path) VALUES('%s', '%s', '%s');", fileName.c_str(), path.c_str(), fullPath.c_str());
-    //    qDebug(query);
     rc = sqlite3_exec(db, query, callback, 0, &zErrMsg);
-
-    //    free (query);
 
     if( rc!=SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
         printf("Query: %s\n", query);
+        sqlite3_free(zErrMsg);
+    }
+}
+
+void DatabaseManager::removeFromIndex(std::string fullPath)
+{
+    char *zErrMsg = 0;
+    int rc;
+
+    Utils::replace(fullPath, "'", "''");
+
+    std::string q = "DELETE FROM fs_index WHERE full_path='" + fullPath + "';";
+
+    rc = sqlite3_exec(db, q.c_str(), 0, 0, &zErrMsg);
+
+    if( rc!=SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        printf("Query: %s\n", q.c_str());
         sqlite3_free(zErrMsg);
     }
 }
@@ -87,13 +101,31 @@ void DatabaseManager::addToWatchList(int watchId, const char *p_path)
     std::string path(p_path);
     Utils::replace(path, "'", "''");
 
-    //FIXME
+    //FIXME: optimize
     std::string q = "INSERT INTO fs_folders(watch_id, full_path) VALUES(" + QString::number(watchId).toStdString() +", '" + path + "');";
 
     //    char query[queryLength];
 
     //    int result = snprintf(query, sizeof(query)-1, , watchId, fullPath.c_str());
     rc = sqlite3_exec(db, q.c_str(), callback, 0, &zErrMsg);
+
+    if( rc!=SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        printf("Query: %s\n", q.c_str());
+        sqlite3_free(zErrMsg);
+    }
+}
+
+void DatabaseManager::removeFromWatchList(std::string fullPath)
+{
+    char *zErrMsg = 0;
+    int rc;
+
+    Utils::replace(fullPath, "'", "''");
+
+    std::string q = "DELETE FROM fs_folders WHERE full_path='" + fullPath + "';";
+
+    rc = sqlite3_exec(db, q.c_str(), 0, 0, &zErrMsg);
 
     if( rc!=SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
@@ -173,8 +205,6 @@ std::string DatabaseManager::getPathByWatchId(int watchId)
     sqlite3_prepare_v2(db, query, length, & stmt, NULL);
     int s = sqlite3_step (stmt);
 
-//    qDebug() << "@DatabaseManager::getPathByWatchId: s:" << QString::number(s) ;
-
     if (s == SQLITE_ROW) {
         const unsigned char * text = sqlite3_column_text (stmt, 1);
         return reinterpret_cast<const char*>(text);
@@ -188,10 +218,9 @@ void DatabaseManager::bindToAllIndexedFolders()
     const char *sql = "SELECT distinct full_path FROM fs_folders";
     sqlite3_prepare_v2(db, sql, strlen (sql) + 1, & stmt, NULL);
     int s = sqlite3_step (stmt);
-
+    //FIXME: do-while
     while (s == SQLITE_ROW) {
         const unsigned char * text = sqlite3_column_text (stmt, 0);
-//        qDebug("adding to watch: %s\n", text);
         InotifyManager::addToWatch(reinterpret_cast<const char*>(text));
 
         s = sqlite3_step (stmt);

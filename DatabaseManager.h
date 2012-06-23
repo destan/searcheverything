@@ -10,11 +10,11 @@ class DatabaseManager
         static void initDb();
         static void closeDb();
 
-        static void addToIndex(char *p_fileName, char *p_path, std::string fullPath);
-        static void removeFromIndex(char* p_fileName, std::string fullPath);
+        static void addToIndex(const char *p_fileName, const char *p_path, std::string fullPath);
+        static void removeFromIndex(std::string fullPath);
 
         static void addToWatchList(int watchId, const char* p_path);
-        static void removeFromWatchList(const char* p_path);
+        static void removeFromWatchList(std::string fullPath);
 
         static std::string getPathByWatchId(int watchId);
         static void bindToAllIndexedFolders();

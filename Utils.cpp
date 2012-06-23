@@ -1,6 +1,6 @@
 
 #include <string>
-
+#include <QDebug>
 #include "Utils.h"
 
 void Utils::replace(std::string &source, std::string oldValue, std::string newValue)
@@ -14,5 +14,27 @@ void Utils::replace(std::string &source, std::string oldValue, std::string newVa
             return;
         }
         x = source.find(oldValue, x);
+    }
+}
+
+std::string Utils::getFileName(const std::string &fullName)
+{
+    try {
+        return fullName.substr(fullName.find_last_of("/") + 1);// +1 to avoid '/'
+    } catch (std::exception e) {
+        qCritical("@Utils::getFileName: exception!");
+        qCritical() << e.what() ;
+        return "";
+    }
+}
+
+std::string Utils::getPath(const std::string &fullName)
+{
+    try{
+        return fullName.substr(0, fullName.find_last_of("/"));
+    } catch (std::exception e) {
+        qCritical("@Utils::getFileName: exception!");
+        qCritical() << e.what() ;
+        return "";
     }
 }
