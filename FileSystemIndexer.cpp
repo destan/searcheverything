@@ -13,9 +13,14 @@
 
 int FileSystemIndexer::totalDirs = 0;
 int FileSystemIndexer::totalFiles = 0;
-bool FileSystemIndexer::isIndexingDone = false;
+bool FileSystemIndexer::isIndexingDoneBefore = false;
 
-void FileSystemIndexer::indexPath(char* path, int level)
+void addToWatch(const char* path){
+    int watchDescriptor = InotifyManager::addToWatch(path);
+    DatabaseManager::addToWatchList(watchDescriptor, path);
+}
+
+void FileSystemIndexer::indexPath(const char* path, int level)
 {
     DIR *dir;
     struct dirent *entry;
@@ -24,23 +29,23 @@ void FileSystemIndexer::indexPath(char* path, int level)
         return;
     }
 
-    int wd = InotifyManager::addToWatch(path);
-    DatabaseManager::addToWatchList(wd, path);
+    // indexing the 'path' itself
+    addToWatch(path);
 
     if (!(entry = readdir(dir))){
         return;
     }
 
-    do {
+    do {// traversing path's children
         if (entry->d_type == DT_DIR) {//is a directory
-            char childPath[3000];//FIXME make dynamic
+            char childPath[3000];//FIXME: make dynamic
             int len = snprintf(childPath, sizeof(childPath)-1, "%s/%s", path, entry->d_name);
 
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0){
                 continue;
             }
-            int watchDescriptor = InotifyManager::addToWatch(childPath);
-            DatabaseManager::addToWatchList(watchDescriptor, childPath);
+
+            addToWatch(childPath);
 
             ++totalDirs;
             FileSystemIndexer::indexPath(childPath, level + 1);
@@ -49,6 +54,6 @@ void FileSystemIndexer::indexPath(char* path, int level)
             ++totalFiles;
             DatabaseManager::addToIndex(entry->d_name, path, std::string(path).append("/").append(entry->d_name));
         }
-    } while ((entry = readdir(dir)));
-    closedir(dir);
+    } while ( ( entry = readdir(dir) ) );
+    closedir(dir);//being a good boy
 }

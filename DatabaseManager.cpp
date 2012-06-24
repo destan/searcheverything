@@ -9,6 +9,8 @@
 #include "Utils.h"
 #include "SearchWindow.h"
 #include "InotifyManager.h"
+#include "SettingsManager.h"
+
 
 sqlite3 *DatabaseManager::db;
 char* errorMessage;
@@ -137,7 +139,7 @@ void DatabaseManager::removeFromWatchList(std::string fullPath)
 void DatabaseManager::initDb()
 {
     // Open Database
-    int rc = sqlite3_open("database", &db);
+    int rc = sqlite3_open(SettingsManager::getDatabaseFileName(), &db);
     if( rc ){
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
@@ -217,12 +219,12 @@ void DatabaseManager::bindToAllIndexedFolders()
     sqlite3_stmt * stmt;
     const char *sql = "SELECT distinct full_path FROM fs_folders";
     sqlite3_prepare_v2(db, sql, strlen (sql) + 1, & stmt, NULL);
-    int s = sqlite3_step (stmt);
-    //FIXME: do-while
-    while (s == SQLITE_ROW) {
+    int queryResult = sqlite3_step (stmt);
+
+    while (queryResult == SQLITE_ROW) {
         const unsigned char * text = sqlite3_column_text (stmt, 0);
         InotifyManager::addToWatch(reinterpret_cast<const char*>(text));
 
-        s = sqlite3_step (stmt);
+        queryResult = sqlite3_step (stmt);
     }
 }

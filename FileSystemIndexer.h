@@ -6,9 +6,9 @@
 class FileSystemIndexer
 {
     public:
-        static void indexPath(char *name, int level);
+        static void indexPath(const char *name, int level);
 
-        static bool isIndexingDone;
+        static bool isIndexingDoneBefore;
     private:
         static int totalDirs;
         static int totalFiles;

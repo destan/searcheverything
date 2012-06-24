@@ -2,6 +2,7 @@
 #define SEARCHWINDOW_H
 
 #include <QMainWindow>
+#include <QStandardItemModel>
 
 namespace Ui {
 class SearchWindow;
@@ -13,6 +14,7 @@ class SearchWindow : public QMainWindow
 
     public:
         static SearchWindow* getInstance(){
+
             static SearchWindow* instance = new SearchWindow();
             return instance;
         }
@@ -31,6 +33,9 @@ class SearchWindow : public QMainWindow
     private slots:
         void on_lineEditSearch_textEdited(const QString &searchKey);
         void triggerSearch();
+        void showContextMenu(const QPoint &position);
+        void handleShowInFolderAction();
+        void quitApplication();
 
     private:
         explicit SearchWindow(QWidget *parent = 0);// Hide to ensure singleton pattern
@@ -38,6 +43,9 @@ class SearchWindow : public QMainWindow
         void operator =(const SearchWindow& ); // Hide and don't implement to ensure singleton pattern
 
         static QString searchKey;
+
+        static QStandardItemModel *pModel;
+        static QAction *showInFolderAction;
 
         Ui::SearchWindow *ui;
 };

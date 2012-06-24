@@ -10,6 +10,7 @@
 #include "DatabaseManager.h"
 #include "FileSystemIndexer.h"
 #include "Utils.h"
+#include "SettingsManager.h"
 
 #define EVENT_SIZE  ( sizeof (struct inotify_event) )
 #define EVENT_BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
@@ -17,10 +18,8 @@
 int InotifyManager::s_fd;
 bool InotifyManager::shallStop = false;
 
-InotifyManager::InotifyManager(QObject *parent) :
-    QObject(parent)
+InotifyManager::InotifyManager(QObject *parent) : QObject(parent)
 {
-
     connect(this, SIGNAL(fileCreated(std::string)), this, SLOT(handleFileCreated(std::string)));
     connect(this, SIGNAL(fileDeleted(std::string)), this, SLOT(handleFileDeleted(std::string)));
     connect(this, SIGNAL(folderCreated(std::string)), this, SLOT(handleFolderCreated(std::string)));
@@ -35,17 +34,17 @@ void InotifyManager::initNotify()
     /*checking for error*/
     if ( s_fd < 0 ) {
         perror( "inotify_init" );
+        qCritical("@InotifyManager::initNotify: Cannot initialize an inotify instance.");
     }
 
-    if( FileSystemIndexer::isIndexingDone ){
+    if( SettingsManager::isIndexingDoneBefore() ){
+        qDebug("@InotifyManager::initNotify: indexing done before, adding indexed folders to watch list...");
         getWatchlistFromDBAndBind();
     }
 }
 
 int InotifyManager::addToWatch(const char path[])
 {
-    qDebug( ) << "adding to watch" << path;
-
     /* Here, the suggestion is to validate the existence of the directory before adding into monitoring list.*/
     int wd = inotify_add_watch( s_fd, path, IN_CREATE | IN_DELETE | IN_MOVE  );
     if(wd < 0){
@@ -54,13 +53,15 @@ int InotifyManager::addToWatch(const char path[])
     return wd;
 }
 
+/**
+ * Need to be executed in a seperate thread.
+ * @brief InotifyManager::startWatching
+ */
 void InotifyManager::startWatching()
 {
     int length;
-    int wd;
     char buffer[EVENT_BUF_LEN];
 
-    /*actually read return the list of change events happens. Here, read the change event one by one and process it accordingly.*/
     forever {
 
         if(shallStop){
@@ -78,14 +79,14 @@ void InotifyManager::startWatching()
 
         /*checking for error*/
         if ( length < 0 ) {
-            qDebug( "read ERROR" );
+            qCritical( "@InotifyManager::startWatching: read ERROR" );
         }
 
         while ( i < length ) {
             struct inotify_event *event = ( struct inotify_event * ) &buffer[ i ];
 
             if ( event->len ) {
-                if ( event->mask & IN_CREATE ) {
+                if ( (event->mask & IN_CREATE) || (event->mask & IN_MOVED_TO) ) {// CREATE or MOVED TO EVENT
                     if ( event->mask & IN_ISDIR ) {
                         std::string path = DatabaseManager::getPathByWatchId(event->wd);
                         path.append("/").append(event->name);
@@ -99,11 +100,11 @@ void InotifyManager::startWatching()
                         emit(getInstance()->fileCreated(path));
                     }
                 }
-                else if ( event->mask & IN_DELETE ) {
+                else if ( (event->mask & IN_DELETE) || (event->mask & IN_MOVED_FROM) ) { // DELETE or MOVED FROM EVENT
                     if ( event->mask & IN_ISDIR ) {
                         std::string path = DatabaseManager::getPathByWatchId(event->wd);
                         path.append("/").append(event->name);
-                        qDebug( ) << "Directory %s deleted.\n" << path.c_str();
+                        qDebug( ) << "Directory %s deleted or moved from.\n" << path.c_str();
                         emit(getInstance()->folderDeleted(path, event->wd));
                     }
                     else {
@@ -111,34 +112,6 @@ void InotifyManager::startWatching()
                         path.append("/").append(event->name);
                         qDebug(  ) << "File %s deleted.\n" << path.c_str();
                         emit(getInstance()->fileDeleted(path));
-                    }
-                }
-                else if ( event->mask & IN_MOVED_FROM ) {
-                    if ( event->mask & IN_ISDIR ) {
-                        std::string path = DatabaseManager::getPathByWatchId(event->wd);
-                        path.append("/").append(event->name);
-                        qDebug(  ) << "Directory %s moved from.\n" << path.c_str();
-                        //                    emit(getInstance()->folderMovedFrom(path));
-                    }
-                    else {
-                        std::string path = DatabaseManager::getPathByWatchId(event->wd);
-                        path.append("/").append(event->name);
-                        qDebug( ) <<  "File %s moved from.\n" << path.c_str();
-                        //                    emit(getInstance()->fileMovedFrom(path));
-                    }
-                }
-                else if ( event->mask & IN_MOVED_TO ) {
-                    if ( event->mask & IN_ISDIR ) {
-                        std::string path = DatabaseManager::getPathByWatchId(event->wd);
-                        path.append("/").append(event->name);
-                        qDebug(  ) << "Directory %s moved to.\n" << path.c_str();
-                        //                    emit(getInstance()->folderMovedTo(path));
-                    }
-                    else {
-                        std::string path = DatabaseManager::getPathByWatchId(event->wd);
-                        path.append("/").append(event->name);
-                        qDebug(  ) << "File %s moved to.\n" << path.c_str();
-                        //                    emit(getInstance()->fileMovedTo(path));
                     }
                 }
             }

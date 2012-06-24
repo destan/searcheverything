@@ -6,39 +6,33 @@
 #include "DatabaseManager.h"
 #include "InotifyManager.h"
 #include "Utils.h"
+#include "SettingsManager.h"
+
 #include <QDebug>
 #include <QtConcurrentRun>
 #include <QDateTime>
+#include <QDir>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    //    QApplication::setQuitOnLastWindowClosed(false);
+    QApplication::setQuitOnLastWindowClosed(false);
 
-    clock_t begin = clock();
-    QDateTime start = QDateTime::currentDateTimeUtc();
+    a.connect(&a, SIGNAL(aboutToQuit()), SettingsManager::getInstance(), SLOT(quitApplication()));
 
-//    FileSystemIndexer::isIndexingDone = true;
-
+    SettingsManager::loadSettings();
     DatabaseManager::initDb();
     InotifyManager::initNotify();
 
-    FileSystemIndexer::indexPath("/home/destan/Desktop", 0);
+    if( !SettingsManager::isIndexingDoneBefore() ){
+        qDebug("@main: indexing file system...");
+        FileSystemIndexer::indexPath( QDir::homePath().toStdString().c_str() , 0);//FIXME: hardcode
+        SettingsManager::indexingDone();
+    }
 
-    QFuture<void> future = QtConcurrent::run(InotifyManager::startWatching);
+    QtConcurrent::run(InotifyManager::startWatching);
 
-    clock_t end = clock();
-
-    double elapsed_secs = ((double) (end - begin)) / CLOCKS_PER_SEC;
-    QDateTime finish = QDateTime::currentDateTimeUtc();
-    qDebug("\n\nIndexing took %f seconds\n", elapsed_secs );
-
-    qint64 t = start.msecsTo(finish) / 1000;
-    qDebug() << "real time" << QString::number(t) << t;
     SearchWindow::showIt();
 
-    int retVal = a.exec();
-    DatabaseManager::closeDb();
-    InotifyManager::stopWatching();
-    return retVal;
+    return a.exec();
 }
