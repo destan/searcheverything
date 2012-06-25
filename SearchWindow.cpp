@@ -6,6 +6,7 @@
 #include "SettingsManager.h"
 #include "FileSystemIndexer.h"
 
+#include <QCloseEvent>
 #include <QDebug>
 #include <QTimer>
 #include <QStandardItemModel>
@@ -27,6 +28,7 @@ QString SearchWindow::searchKey;
 QStandardItemModel *SearchWindow::pModel = new QStandardItemModel();
 QAction *SearchWindow::showInFolderAction = new QAction(trUtf8("Show in folder"), 0);
 QAction *SearchWindow::openAction = new QAction(trUtf8("Open"), 0);
+bool SearchWindow::isAlive = false;
 
 SearchWindow::SearchWindow(QWidget *parent) : QMainWindow(parent),  ui(new Ui::SearchWindow)
 {
@@ -47,6 +49,7 @@ SearchWindow::SearchWindow(QWidget *parent) : QMainWindow(parent),  ui(new Ui::S
 
     ui->checkBoxOnlyFiles->setChecked( SettingsManager::isOnlyFiles() );
     ui->labelReindexingWait->hide();
+    isAlive = true;
 }
 
 SearchWindow::~SearchWindow()
@@ -64,6 +67,13 @@ void SearchWindow::changeEvent(QEvent *e)
         default:
             break;
     }
+}
+
+void SearchWindow::closeEvent(QCloseEvent *event)
+{
+    isAlive = false;
+    pModel->clear();
+    event->accept();
 }
 
 void SearchWindow::on_lineEditSearch_textEdited(const QString &searchKey)
@@ -181,8 +191,8 @@ void reindex(){
 void SearchWindow::on_actionReindex_triggered()
 {
     int result = QMessageBox::question(0,"Are you sure",
-                 "Do you want to reindex your home folder? This may take several minutes depending on your home folder's size.",
-                  QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+                                       "Do you want to reindex your home folder? This may take several minutes depending on your home folder's size.",
+                                       QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
 
     if(result == QMessageBox::No){
         return;
@@ -195,12 +205,12 @@ void SearchWindow::on_actionReindex_triggered()
     ui->statusBar->showMessage(trUtf8("reindexing..."));
 
     // Instantiate the objects and connect to the finished signal.
-     static QFutureWatcher<void> watcher;
-     connect(&watcher, SIGNAL(finished()), this, SLOT(handleFinishedReindexing()));
+    static QFutureWatcher<void> watcher;
+    connect(&watcher, SIGNAL(finished()), this, SLOT(handleFinishedReindexing()));
 
-     // Start the computation.
-     QFuture<void> future = QtConcurrent::run(reindex);
-     watcher.setFuture(future);
+    // Start the computation.
+    QFuture<void> future = QtConcurrent::run(reindex);
+    watcher.setFuture(future);
 }
 
 void SearchWindow::handleFinishedReindexing(){

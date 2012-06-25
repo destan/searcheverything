@@ -7,11 +7,13 @@
 #include "InotifyManager.h"
 #include "Utils.h"
 #include "SettingsManager.h"
+#include "TrayManager.h"
 
 #include <QDebug>
 #include <QtConcurrentRun>
 #include <QDateTime>
 #include <QDir>
+#include <QMessageBox>
 
 int main(int argc, char *argv[])
 {
@@ -21,6 +23,13 @@ int main(int argc, char *argv[])
     a.connect(&a, SIGNAL(aboutToQuit()), SettingsManager::getInstance(), SLOT(quitApplication()));
 
     SettingsManager::loadSettings();
+
+    if( !SettingsManager::acquireApplicationLock() ){
+        QMessageBox::critical(0, QObject::trUtf8("SearchEverything is already running!"), QObject::trUtf8("You are already searching like hell!"), QMessageBox::Ok, QMessageBox::Ok);
+        return 13;
+    }
+
+    TrayManager::getInstance()->init();
     DatabaseManager::initDb();
     InotifyManager::initNotify();
 

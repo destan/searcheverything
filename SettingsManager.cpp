@@ -132,6 +132,7 @@ void SettingsManager::quitApplication()
     InotifyManager::stopWatching();
     DatabaseManager::closeDb();
     saveSettings();
+    releaseApplicationLock();
 }
 
 
@@ -145,4 +146,34 @@ void SettingsManager::setOnlyFiles(bool isOnlyFiles)
 {
     onlyFiles = isOnlyFiles;
     saveSettings();
+}
+
+bool SettingsManager::acquireApplicationLock()
+{
+    static QString lockFileName = QString(databaseFileName).append("Lock");
+    QFile lockFile( lockFileName );
+    if(lockFile.exists()){
+        return false;
+    }
+
+    if(!lockFile.open(QIODevice::WriteOnly | QIODevice::Text)){
+        qWarning("@ApplicationManager::acquireApplicationLock: Cannot create lock file");
+        return false;
+    }
+
+    qDebug() << "@ApplicationManager::acquireApplicationLock: Lock file created at " << lockFileName;
+    lockFile.close();
+    return true;
+}
+
+bool SettingsManager::releaseApplicationLock()
+{
+    static QString lockFileName = QString(databaseFileName).append("Lock");
+
+    if(!QFile::remove( lockFileName )){
+        qCritical("@ApplicationManager::releaseApplicationLock: Cannot remove lock file");
+        return false;
+    }
+    qDebug("@ApplicationManager::releaseApplicationLock: Removed lock file");
+    return true;
 }

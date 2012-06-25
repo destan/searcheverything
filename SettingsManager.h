@@ -37,6 +37,9 @@ class SettingsManager : public QObject
         static void setOnlyFiles(bool isOnlyFiles);
         static void setIndexingDone(bool isDone);
 
+        static bool acquireApplicationLock();
+        static bool releaseApplicationLock();
+
     public slots:
         void quitApplication();
 

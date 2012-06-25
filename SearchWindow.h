@@ -15,7 +15,10 @@ class SearchWindow : public QMainWindow
     public:
         static SearchWindow* getInstance(){
 
-            static SearchWindow* instance = new SearchWindow();
+            static SearchWindow* instance;
+            if(!isAlive){
+                instance = new SearchWindow();
+            }
             return instance;
         }
 
@@ -27,8 +30,10 @@ class SearchWindow : public QMainWindow
 
         ~SearchWindow();
 
+
     protected:
         void changeEvent(QEvent *e);
+        void closeEvent(QCloseEvent *e);
 
     private slots:
         void on_lineEditSearch_textEdited(const QString &searchKey);
@@ -53,6 +58,7 @@ class SearchWindow : public QMainWindow
         static QStandardItemModel *pModel;
         static QAction *showInFolderAction;
         static QAction *openAction;
+        static bool isAlive;
 
         Ui::SearchWindow *ui;
 };

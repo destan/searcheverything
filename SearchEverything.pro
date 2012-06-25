@@ -19,16 +19,18 @@ SOURCES += main.cpp\
     DatabaseManager.cpp \
     Utils.cpp \
     InotifyManager.cpp \
-    SettingsManager.cpp
+    SettingsManager.cpp \
+    TrayManager.cpp
 
 HEADERS  += SearchWindow.h \
     FileSystemIndexer.h \
     DatabaseManager.h \
     Utils.h \
     InotifyManager.h \
-    SettingsManager.h
+    SettingsManager.h \
+    TrayManager.h
 
 FORMS    += SearchWindow.ui
 
 RESOURCES += \
-    icons.qrc
+    resources/icons/icons.qrc
