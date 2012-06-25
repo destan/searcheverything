@@ -4,6 +4,7 @@
 
 #include <QString>
 #include <QDebug>
+#include <QFileInfo>
 
 #include "DatabaseManager.h"
 #include "Utils.h"
@@ -24,7 +25,7 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName){
     return 0;
 }
 
-static int searchCallback(void *NotUsed, int argc, char **argv, char **azColName){
+static int searchFilesCallback(void *NotUsed, int argc, char **argv, char **azColName){
     int i;
     QStringList resultList;
     for(i=0; i<argc; i++){
@@ -138,7 +139,10 @@ void DatabaseManager::removeFromWatchList(std::string fullPath)
 
 void DatabaseManager::initDb()
 {
-    // Open Database
+    // Open and create(if neccessary) database
+    QFileInfo databaseFile( SettingsManager::getDatabaseFileName() );
+    bool databaseCreatedBefore = databaseFile.exists();
+
     int rc = sqlite3_open(SettingsManager::getDatabaseFileName(), &db);
     if( rc ){
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -146,15 +150,18 @@ void DatabaseManager::initDb()
         return ;
     }
 
-    //Create databses
-    sqlite3_exec(db, "CREATE VIRTUAL TABLE fs_index USING fts4(file_name TEXT, path TEXT, full_path TEXT);", NULL, NULL, &errorMessage);
+    if( !SettingsManager::isIndexingDoneBefore() || !databaseCreatedBefore ){
+        //Create databases
+        sqlite3_exec(db, "CREATE VIRTUAL TABLE fs_index USING fts4(file_name TEXT, path TEXT, full_path TEXT);", NULL, NULL, &errorMessage);
 
-    sqlite3_exec(db, "CREATE TABLE fs_folders (watch_id INTEGER, full_path TEXT);", NULL, NULL, &errorMessage);
+        sqlite3_exec(db, "CREATE TABLE fs_folders (watch_id INTEGER, full_path TEXT);", NULL, NULL, &errorMessage);
 
-    if( rc ){
-        fprintf(stderr, "Can't create database: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return ;
+        if( rc ){
+            fprintf(stderr, "Can't create database: %s\n", sqlite3_errmsg(db));
+            sqlite3_close(db);
+            return ;
+        }
+        SettingsManager::setIndexingDone(false);
     }
 
     // BEGIN TRANSACTION
@@ -181,7 +188,7 @@ void DatabaseManager::closeDb()
 }
 
 
-void DatabaseManager::search(std::string fullPath)
+void DatabaseManager::searchFiles(std::string fullPath)
 {
     char *zErrMsg = 0;
     int rc;
@@ -190,7 +197,23 @@ void DatabaseManager::search(std::string fullPath)
     char query[ fullPath.length() + 57 ];
     snprintf(query, sizeof(query)-1, "SELECT full_path FROM fs_index WHERE file_name MATCH '%s';", fullPath.c_str());
 
-    rc = sqlite3_exec(db, query, searchCallback, 0, &zErrMsg);
+    rc = sqlite3_exec(db, query, searchFilesCallback, 0, &zErrMsg);
+    if( rc!=SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    }
+}
+
+void DatabaseManager::searchFolders(std::string fullPath)
+{
+    char *zErrMsg = 0;
+    int rc;
+
+    Utils::replace(fullPath, "'", "''");
+    char query[ fullPath.length() + 57 ];
+    snprintf(query, sizeof(query)-1, "SELECT DISTINCT path FROM fs_index WHERE path MATCH '%s';", fullPath.c_str());
+
+    rc = sqlite3_exec(db, query, searchFilesCallback, 0, &zErrMsg);
     if( rc!=SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);

@@ -21,18 +21,9 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QCheckBox" name="checkBox">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
+       <widget class="QCheckBox" name="checkBoxOnlyFiles">
         <property name="text">
          <string>Find only files</string>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -69,9 +60,25 @@
      </widget>
     </item>
     <item>
+     <widget class="QLabel" name="labelReindexingWait">
+      <property name="text">
+       <string>Please wait while reindexing...</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QListView" name="listView">
       <property name="editTriggers">
        <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>16</width>
+        <height>16</height>
+       </size>
+      </property>
+      <property name="uniformItemSizes">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -88,8 +95,10 @@
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>Menu</string>
     </property>
+    <addaction name="actionReindex"/>
+    <addaction name="separator"/>
     <addaction name="actionMinimize_to_system_tray"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -98,12 +107,26 @@
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionMinimize_to_system_tray">
    <property name="text">
-    <string>Minimize to system tray (ESC)</string>
+    <string>Minimize to system tray</string>
+   </property>
+   <property name="toolTip">
+    <string>Minimize to system tray</string>
+   </property>
+   <property name="shortcut">
+    <string>Esc</string>
    </property>
   </action>
   <action name="actionQuit">
    <property name="text">
     <string>&amp;Quit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionReindex">
+   <property name="text">
+    <string>Reindex</string>
    </property>
   </action>
  </widget>

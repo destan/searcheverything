@@ -6,6 +6,7 @@
 
 static const char APPLICATION_START_AT_STARTUP[] = "application/startAtStartup";
 static const char APPLICATION_INDEXING_DONE_BEFORE[] = "application/indexingDoneBefore";
+static const char APPLICATION_ONLY_FILES[] = "application/onlyFiles";
 
 static const char HOTKEY_SEARCH[] = "hotkey/search";
 
@@ -29,11 +30,12 @@ class SettingsManager : public QObject
         static QString getHotKeySearch();
         static const char *getDatabaseFileName();
         static bool isIndexingDoneBefore();
+        static bool isOnlyFiles();
 
         static void setHotKeySearch(QString hotKeySearch);
         static void setStartAtStartup(bool startAtStartup);
-
-        static void indexingDone();
+        static void setOnlyFiles(bool isOnlyFiles);
+        static void setIndexingDone(bool isDone);
 
     public slots:
         void quitApplication();
@@ -48,6 +50,7 @@ class SettingsManager : public QObject
         //Application
         static bool startAtStartup;
         static bool indexingDoneBefore;
+        static bool onlyFiles;
         static QString databaseFileName;
 
         //Hotkey

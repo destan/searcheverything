@@ -32,6 +32,7 @@
 //Application
 bool SettingsManager::startAtStartup;
 bool SettingsManager::indexingDoneBefore;
+bool SettingsManager::onlyFiles;
 QString SettingsManager::databaseFileName;
 
 //Hotkey
@@ -59,6 +60,7 @@ void SettingsManager::loadSettings()
     //Application
     startAtStartup = qSettings.value(APPLICATION_START_AT_STARTUP, false).toBool();
     indexingDoneBefore = qSettings.value(APPLICATION_INDEXING_DONE_BEFORE, false).toBool();
+    onlyFiles = qSettings.value(APPLICATION_ONLY_FILES, false).toBool();
 
     //Hotkey
     hotKeySearch = qSettings.value(HOTKEY_SEARCH, "CTRL+SHIFT+S").toString();
@@ -76,6 +78,7 @@ void SettingsManager::saveSettings(){
     //Application
     qSettings.setValue(APPLICATION_START_AT_STARTUP, startAtStartup);
     qSettings.setValue(APPLICATION_INDEXING_DONE_BEFORE, indexingDoneBefore);
+    qSettings.setValue(APPLICATION_ONLY_FILES, onlyFiles);
 
     //Hotkey
     qSettings.setValue(HOTKEY_SEARCH, hotKeySearch);
@@ -112,10 +115,15 @@ bool SettingsManager::isIndexingDoneBefore()
     return indexingDoneBefore;
 }
 
-
-void SettingsManager::indexingDone()
+bool SettingsManager::isOnlyFiles()
 {
-    indexingDoneBefore = true;
+    return onlyFiles;
+}
+
+
+void SettingsManager::setIndexingDone(bool isDone)
+{
+    indexingDoneBefore = isDone;
     saveSettings();
 }
 
@@ -130,4 +138,11 @@ void SettingsManager::quitApplication()
 const char *SettingsManager::getDatabaseFileName()
 {
     return databaseFileName.toStdString().c_str();
+}
+
+
+void SettingsManager::setOnlyFiles(bool isOnlyFiles)
+{
+    onlyFiles = isOnlyFiles;
+    saveSettings();
 }

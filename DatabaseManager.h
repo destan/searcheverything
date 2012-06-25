@@ -19,7 +19,8 @@ class DatabaseManager
         static std::string getPathByWatchId(int watchId);
         static void bindToAllIndexedFolders();
 
-        static void search(std::string fullPath);
+        static void searchFiles(std::string fullPath);
+        static void searchFolders(std::string fullPath);
 
     private:
         static sqlite3 *db;

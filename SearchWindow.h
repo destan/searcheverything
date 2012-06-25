@@ -35,7 +35,13 @@ class SearchWindow : public QMainWindow
         void triggerSearch();
         void showContextMenu(const QPoint &position);
         void handleShowInFolderAction();
+        void handleOpenAction();
         void quitApplication();
+        void handleFinishedReindexing();
+
+        void on_checkBoxOnlyFiles_toggled(bool checked);
+        void on_listView_doubleClicked(const QModelIndex &index);
+        void on_actionReindex_triggered();
 
     private:
         explicit SearchWindow(QWidget *parent = 0);// Hide to ensure singleton pattern
@@ -46,6 +52,7 @@ class SearchWindow : public QMainWindow
 
         static QStandardItemModel *pModel;
         static QAction *showInFolderAction;
+        static QAction *openAction;
 
         Ui::SearchWindow *ui;
 };

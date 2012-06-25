@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     if( !SettingsManager::isIndexingDoneBefore() ){
         qDebug("@main: indexing file system...");
         FileSystemIndexer::indexPath( QDir::homePath().toStdString().c_str() , 0);//FIXME: hardcode
-        SettingsManager::indexingDone();
+        SettingsManager::setIndexingDone(true);
     }
 
     QtConcurrent::run(InotifyManager::startWatching);

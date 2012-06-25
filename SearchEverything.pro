@@ -29,3 +29,6 @@ HEADERS  += SearchWindow.h \
     SettingsManager.h
 
 FORMS    += SearchWindow.ui
+
+RESOURCES += \
+    icons.qrc
