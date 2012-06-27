@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/icons">
         <file>trayIcon.png</file>
+        <file>splash.jpg</file>
+        <file>trash.png</file>
     </qresource>
 </RCC>

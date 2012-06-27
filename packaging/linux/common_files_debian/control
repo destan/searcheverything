@@ -1,0 +1,21 @@
+Source: searcheverything
+Section: gnome
+Priority: optional
+Maintainer: Destan Sarpkaya <destan@dorukdestan.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.2
+Homepage: http://searcheverything.dorukdestan.com
+#Vcs-Git: git://git.debian.org/collab-maint/cevirgec.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/cevirgec.git;a=summary
+
+Package: searcheverything
+Version: VERSION_PLACEHOLDER
+Installed-Size: 8
+Section: gnome
+Maintainer: Destan Sarpkaya <destan@dorukdestan.com>
+Priority: optional
+Architecture: ARCH_PLACEHOLDER
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Searching like hell!
+ Search Everything(in Windows) clone for Ubuntu 
+

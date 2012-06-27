@@ -41,6 +41,7 @@ class SearchWindow : public QMainWindow
         void showContextMenu(const QPoint &position);
         void handleShowInFolderAction();
         void handleOpenAction();
+        void handleShowTrashActionAction();
         void quitApplication();
         void handleFinishedReindexing();
 
@@ -58,6 +59,7 @@ class SearchWindow : public QMainWindow
         static QStandardItemModel *pModel;
         static QAction *showInFolderAction;
         static QAction *openAction;
+        static QAction *showTrashAction;
         static bool isAlive;
 
         Ui::SearchWindow *ui;

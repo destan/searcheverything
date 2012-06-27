@@ -28,6 +28,8 @@ QString SearchWindow::searchKey;
 QStandardItemModel *SearchWindow::pModel = new QStandardItemModel();
 QAction *SearchWindow::showInFolderAction = new QAction(trUtf8("Show in folder"), 0);
 QAction *SearchWindow::openAction = new QAction(trUtf8("Open"), 0);
+QAction *SearchWindow::showTrashAction = new QAction(trUtf8("Show trash"), 0);
+
 bool SearchWindow::isAlive = false;
 
 SearchWindow::SearchWindow(QWidget *parent) : QMainWindow(parent),  ui(new Ui::SearchWindow)
@@ -46,6 +48,7 @@ SearchWindow::SearchWindow(QWidget *parent) : QMainWindow(parent),  ui(new Ui::S
     connect(this, SIGNAL( customContextMenuRequested(const QPoint &) ), this, SLOT( showContextMenu(const QPoint &) ) );
     connect(showInFolderAction, SIGNAL( triggered() ), this, SLOT( handleShowInFolderAction() ) );
     connect(openAction, SIGNAL( triggered() ), this, SLOT( handleOpenAction() ) );
+    connect(showTrashAction, SIGNAL( triggered() ), this, SLOT( handleShowTrashActionAction() ) );
 
     ui->checkBoxOnlyFiles->setChecked( SettingsManager::isOnlyFiles() );
     ui->labelReindexingWait->hide();
@@ -120,7 +123,11 @@ void SearchWindow::showContextMenu(const QPoint &position)
     QString fullPath = resultMap.value(Qt::DisplayRole).toString();
 
     QFileInfo selectedItem(fullPath);
-    if( selectedItem.isDir() ){
+
+    if( !selectedItem.exists() ){
+        contextMenu.addAction(showTrashAction);
+    }
+    else if( selectedItem.isDir() ){
         contextMenu.addAction(openAction);
     }
     else{
@@ -145,7 +152,16 @@ void SearchWindow::handleOpenAction()
     QMap<int, QVariant> resultMap = ui->listView->model()->itemData( ui->listView->currentIndex() );
     QString fullPath = resultMap.value(Qt::DisplayRole).toString();
 
-    QDesktopServices::openUrl( QUrl("file:///" + fullPath) );
+    if(QFileInfo(fullPath).exists()){
+        QDesktopServices::openUrl( QUrl("file:///" + fullPath) );
+    }else{
+        QDesktopServices::openUrl( QUrl("trash:///") );
+    }
+}
+
+void SearchWindow::handleShowTrashActionAction()
+{
+    QDesktopServices::openUrl( QUrl("trash:///") );
 }
 
 void SearchWindow::quitApplication()
@@ -156,10 +172,18 @@ void SearchWindow::quitApplication()
 void SearchWindow::updateResults(QStringList resultList)
 {
     static QFileIconProvider iconProvider;
+    static QIcon trashIcon(":/icons/trash.png");
 
     foreach (QString line, resultList) {
         QStandardItem *item = new QStandardItem(line);
-        item->setIcon( iconProvider.icon( QFileInfo(line) ) );
+        QIcon icon = iconProvider.icon( QFileInfo(line) );
+
+        if(icon.isNull()){
+            item->setIcon( trashIcon );
+        }else{
+            item->setIcon( icon );
+        }
+
         pModel->appendRow(item);
     }
 }

@@ -10,7 +10,7 @@ LIBS     += -lsqlite3
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = SearchEverything
+TARGET = searcheverything
 TEMPLATE = app
 
 SOURCES += main.cpp\
@@ -34,3 +34,21 @@ FORMS    += SearchWindow.ui
 
 RESOURCES += \
     resources/icons/icons.qrc
+
+#Installation
+unix:configfiles.extra = make clean
+binfile.files += searcheverything
+binfile.path = /usr/bin/
+iconfiles.files += data/usr/share/searcheverything/*
+iconfiles.path = /usr/share/searcheverything
+docfiles.files += data/doc/*
+docfiles.path = /usr/share/doc/
+manfiles.files += data/man/*
+manfiles.path = /usr/share/man/man1/
+shortcutfiles.files += data/SearchEverything.desktop
+shortcutfiles.path = /usr/share/applications/
+INSTALLS += iconfiles
+INSTALLS += docfiles
+INSTALLS += manfiles
+INSTALLS += shortcutfiles
+INSTALLS += binfile
