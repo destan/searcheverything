@@ -26,8 +26,8 @@
 #include <QFile>
 #include <QDesktopServices>
 #include "SettingsManager.h"
-#include "DatabaseManager.h"
-#include "InotifyManager.h"
+#include "core/DatabaseManager.h"
+#include "core/InotifyManager.h"
 
 //Application
 bool SettingsManager::startAtStartup;

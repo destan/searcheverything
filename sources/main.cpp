@@ -1,10 +1,10 @@
 #include <QApplication>
-#include "SearchWindow.h"
+#include "gui/SearchWindow.h"
 #include <time.h>
 
-#include "FileSystemIndexer.h"
-#include "DatabaseManager.h"
-#include "InotifyManager.h"
+#include "core/FileSystemIndexer.h"
+#include "core/DatabaseManager.h"
+#include "core/InotifyManager.h"
 #include "Utils.h"
 #include "SettingsManager.h"
 #include "TrayManager.h"
@@ -15,6 +15,7 @@
 #include <QDir>
 #include <QMessageBox>
 #include <QSplashScreen>
+#include <QTextCodec>
 
 int main(int argc, char *argv[])
 {
@@ -30,11 +31,27 @@ int main(int argc, char *argv[])
 
     SettingsManager::loadSettings();
 
+
+    if(QApplication::arguments().size() > 1){//first argument is the app name
+        if(QApplication::arguments().contains(QString("--force"))){
+            SettingsManager::releaseApplicationLock();
+        }
+        else{
+            qDebug("Wrong arguments");
+            exit(-1);
+        }
+    }
+
     if( !SettingsManager::acquireApplicationLock() ){
         splash.showMessage("SearchEverything is already running", Qt::AlignBottom, Qt::gray);
         QMessageBox::critical(0, QObject::trUtf8("SearchEverything is already running!"), QObject::trUtf8("You are already searching like hell!"), QMessageBox::Ok, QMessageBox::Ok);
         return 13;
     }
+
+    //Makin' the universe utf-8, as it should have been at the first place...
+    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
+    QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
 
     splash.showMessage("adding folders to watch...", Qt::AlignBottom, Qt::gray);
 

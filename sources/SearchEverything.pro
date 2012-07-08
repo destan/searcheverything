@@ -14,23 +14,26 @@ TARGET = searcheverything
 TEMPLATE = app
 
 SOURCES += main.cpp\
-        SearchWindow.cpp \
-    FileSystemIndexer.cpp \
-    DatabaseManager.cpp \
     Utils.cpp \
-    InotifyManager.cpp \
     SettingsManager.cpp \
-    TrayManager.cpp
+    TrayManager.cpp \
+    gui/SearchWindow.cpp \
+    gui/SettingsWindow.cpp \
+    core/FileSystemIndexer.cpp \
+    core/DatabaseManager.cpp \
+    core/InotifyManager.cpp
 
-HEADERS  += SearchWindow.h \
-    FileSystemIndexer.h \
-    DatabaseManager.h \
-    Utils.h \
-    InotifyManager.h \
+HEADERS  += Utils.h \
     SettingsManager.h \
-    TrayManager.h
+    TrayManager.h \
+    gui/SearchWindow.h \
+    gui/SettingsWindow.h \
+    core/DatabaseManager.h \
+    core/FileSystemIndexer.h \
+    core/InotifyManager.h
 
-FORMS    += SearchWindow.ui
+FORMS    += gui/SearchWindow.ui \
+    gui/SettingsWindow.ui
 
 RESOURCES += \
     resources/icons/icons.qrc

@@ -1,10 +1,11 @@
-#include "SearchWindow.h"
+#include "gui/SearchWindow.h"
 #include "ui_SearchWindow.h"
 #include "Utils.h"
 
-#include "DatabaseManager.h"
+#include "core/DatabaseManager.h"
+#include "core/InotifyManager.h"
+#include "core/FileSystemIndexer.h"
 #include "SettingsManager.h"
-#include "FileSystemIndexer.h"
 
 #include <QCloseEvent>
 #include <QDebug>
@@ -16,7 +17,6 @@
 #include <QIcon>
 #include <QFileIconProvider>
 #include <QMessageBox>
-#include <InotifyManager.h>
 #include <QLabel>
 #include <QDir>
 #include <QtConcurrentRun>

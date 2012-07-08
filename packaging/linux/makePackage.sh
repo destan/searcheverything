@@ -45,10 +45,10 @@ echo "Using architecture " $cevirgecArchitecture
 #prepare files
 rm -rf area																#clean 'area'
 mkdir -p area/searcheverything-$cevirgecVersion/data
-cp -R common_files_debian/data/* area/searcheverything-$cevirgecVersion/data	#copy data folder
-cp ../../* area/searcheverything-$cevirgecVersion								#copy source
-sed -i "s/{DATE_PLACEHOLDER}/`date -R`/" ../../resources/app/changelog.txt    # write date of changelog, this should be before 'copy resources' otherwise source mismatch occurs and packaging fails
-cp -R ../../resources area/searcheverything-$cevirgecVersion					#copy resources folder of source
+cp -R common_files_debian/data/* area/searcheverything-$cevirgecVersion/data	# copy data folder
+cp -R ../../sources/* area/searcheverything-$cevirgecVersion						# copy source
+sed -i "s/{DATE_PLACEHOLDER}/`date -R`/" ../../sources/resources/app/changelog.txt      # write date of changelog, this should be before 'copy resources' otherwise source mismatch occurs and packaging fails
+#cp -R ../../resources area/searcheverything-$cevirgecVersion					# copy resources folder of source
 cd area/searcheverything-$cevirgecVersion
 rm -v *.pro.user *.o *.obj *.cdx *.dc
 
@@ -68,7 +68,7 @@ sed -i "s/ARCH_PLACEHOLDER/$cevirgecArchitecture/" debian/control
 
 #manipulate changelog 
 echo "writing changelog"
-cp resources/app/changelog.txt debian/changelog                         # Copy changelog from resources
+cp sources/resources/app/changelog.txt debian/changelog                         # Copy changelog from resources
 
 #start build
 debuild -kdestan@dorukdestan.com

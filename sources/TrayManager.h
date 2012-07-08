@@ -24,6 +24,7 @@ class TrayManager : public QObject
     private slots:
         void quitAppSlot();
         void showSearchWindowSlot();
+        void showSettingsWindowSlot();
 
     private:
         explicit TrayManager(QObject *parent = 0);// Hide to ensure singleton pattern
@@ -34,6 +35,7 @@ class TrayManager : public QObject
         QMenu *trayIconMenu;
 
         QAction *searchAction;
+        QAction *settingsAction;
         QAction *quitAction;
 };
 

@@ -1,5 +1,6 @@
 #include "TrayManager.h"
-#include "SearchWindow.h"
+#include "gui/SearchWindow.h"
+#include "gui/SettingsWindow.h"
 
 #include <QMenu>
 #include <QDebug>
@@ -22,17 +23,20 @@ int TrayManager::init()
     if(TrayManager::m_pTrayIcon == 0){
         //Menu actions
         searchAction = new QAction(tr("&Search"), this);
+        settingsAction = new QAction(tr("Settings"), this);
         quitAction = new QAction(tr("&Quit"), this);
 
         //Menu items
         trayIconMenu = new QMenu();
         trayIconMenu->addAction(searchAction);
+        trayIconMenu->addAction(settingsAction);
         trayIconMenu->addSeparator();
         trayIconMenu->addAction(quitAction);
 
         //Signal-slot connections
         connect(searchAction, SIGNAL(triggered()), this, SLOT(showSearchWindowSlot()));
         connect(quitAction, SIGNAL(triggered()), this, SLOT(quitAppSlot()));
+        connect(settingsAction, SIGNAL(triggered()), this, SLOT(showSettingsWindowSlot()));
 
         //Put the system tray icon
         const QIcon icon = QIcon(":/icons/trayIcon.png");
@@ -65,4 +69,10 @@ void TrayManager::quitAppSlot()
 void TrayManager::showSearchWindowSlot()
 {
     SearchWindow::showIt();
+}
+
+void TrayManager::showSettingsWindowSlot()
+{
+    SettingsWindow *s = new SettingsWindow();
+    s->show();
 }

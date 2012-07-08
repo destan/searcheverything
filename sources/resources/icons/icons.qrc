@@ -3,5 +3,8 @@
         <file>trayIcon.png</file>
         <file>splash.jpg</file>
         <file>trash.png</file>
+        <file>about.png</file>
+        <file>folders.png</file>
+        <file>search.png</file>
     </qresource>
 </RCC>

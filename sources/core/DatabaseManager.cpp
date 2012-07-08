@@ -8,7 +8,7 @@
 
 #include "DatabaseManager.h"
 #include "Utils.h"
-#include "SearchWindow.h"
+#include "gui/SearchWindow.h"
 #include "InotifyManager.h"
 #include "SettingsManager.h"
 
