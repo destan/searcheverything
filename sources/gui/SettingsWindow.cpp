@@ -18,9 +18,11 @@
     along with SearchEverything.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <QFileSystemModel>
 
 #include "SettingsWindow.h"
 #include "ui_SettingsWindow.h"
+#include "SelectableFileSystemModel.h"
 
 SettingsWindow::SettingsWindow(QWidget *parent) :
     QWidget(parent),
@@ -32,6 +34,19 @@ SettingsWindow::SettingsWindow(QWidget *parent) :
     connect(ui->listWidget,
             SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)),
             this, SLOT(changePage(QListWidgetItem*,QListWidgetItem*)));
+
+    SelectableFileSystemModel *fsModel = new SelectableFileSystemModel;
+
+    ui->treeViewFoldersToBeIndexed->setModel(fsModel);
+
+    /* Set home as the default selected path */
+    ui->treeViewFoldersToBeIndexed->setCurrentIndex( fsModel->index(QDir::homePath()) );
+    ui->treeViewFoldersToBeIndexed->hideColumn(1);//Size
+    ui->treeViewFoldersToBeIndexed->hideColumn(2);//Type
+    ui->treeViewFoldersToBeIndexed->hideColumn(3);//Date modified
+
+    ui->treeViewFoldersToBeIndexed->setAnimated(true);
+    ui->treeViewFoldersToBeIndexed->resizeColumnToContents(0);
 }
 
 SettingsWindow::~SettingsWindow()

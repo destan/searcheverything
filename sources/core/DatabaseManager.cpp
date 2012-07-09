@@ -171,7 +171,7 @@ void DatabaseManager::initDb()
         return ;
     }
 
-    if( !SettingsManager::isIndexingDoneBefore() || !databaseCreatedBefore ){
+    if( !SettingsManager::get("indexingDoneBefore").toBool() || !databaseCreatedBefore ){
         //Create databases
         sqlite3_exec(db, "CREATE VIRTUAL TABLE fs_index USING fts4(file_name TEXT, path TEXT, full_path TEXT);", NULL, NULL, &errorMessage);
 
@@ -182,7 +182,7 @@ void DatabaseManager::initDb()
             sqlite3_close(db);
             return ;
         }
-        SettingsManager::setIndexingDone(false);
+        SettingsManager::set("indexingDoneBefore", false);
     }
 
     // BEGIN TRANSACTION

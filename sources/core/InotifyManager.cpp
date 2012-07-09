@@ -58,7 +58,7 @@ void InotifyManager::initNotify()
         qCritical("@InotifyManager::initNotify: Cannot initialize an inotify instance.");
     }
 
-    if( SettingsManager::isIndexingDoneBefore() ){
+    if( SettingsManager::get("indexingDoneBefore").toBool() ){
         qDebug("@InotifyManager::initNotify: indexing done before, adding indexed folders to watch list...");
         getWatchlistFromDBAndBind();
     }

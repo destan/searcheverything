@@ -20,132 +20,59 @@
 
 #include <iostream>
 #include <QDir>
-#include <QDebug>
 #include <QApplication>
-#include <QDebug>
 #include <QFile>
 #include <QDesktopServices>
+#include <QDebug>
+
 #include "SettingsManager.h"
 #include "core/DatabaseManager.h"
 #include "core/InotifyManager.h"
 
-//Application
-bool SettingsManager::startAtStartup;
-bool SettingsManager::indexingDoneBefore;
-bool SettingsManager::onlyFiles;
 QString SettingsManager::databaseFileName;
+QStringList SettingsManager::definedSettings;
+QVariantMap SettingsManager::settingsContainer;
+bool SettingsManager::isLoading = true;//true as default because settings start loading at the constructor
 
-//Hotkey
-QString SettingsManager::hotKeySearch;
+SettingsManager::SettingsManager(QObject *parent) : QObject(parent) {
+    /* Setup definedSettings to validate
+       Whenever a new settings should be added,
+     the key first need to be added to this list.
+    */
+    definedSettings << "startAtStartup"             /* bool */
+                    << "indexingDoneBefore"         /* bool */
+                    << "onlyFiles";                 /* bool */
 
-SettingsManager::SettingsManager(QObject *parent) : QObject(parent) {}
-
-void SettingsManager::loadSettings()
-{
-
-    //Settings info
-    QApplication::setOrganizationName(ORG_NAME);
-    QApplication::setOrganizationDomain(ORG_DOMAIN);
-    QApplication::setApplicationName(APP_NAME);
-
-    QSettings qSettings;
-
-    //Must be set after settings info set
-    databaseFileName = QDesktopServices::storageLocation(QDesktopServices::DataLocation).append(QDir::separator()).append("database");
-    qDebug() << "SearchEverything using" << databaseFileName << "as database";
-
-    //ensure the path exists
-    QDir().mkpath( QDesktopServices::storageLocation(QDesktopServices::DataLocation) );
-
-    //Application
-    startAtStartup = qSettings.value(APPLICATION_START_AT_STARTUP, false).toBool();
-    indexingDoneBefore = qSettings.value(APPLICATION_INDEXING_DONE_BEFORE, false).toBool();
-    onlyFiles = qSettings.value(APPLICATION_ONLY_FILES, false).toBool();
-
-    //Hotkey
-    hotKeySearch = qSettings.value(HOTKEY_SEARCH, "CTRL+SHIFT+S").toString();
-
-    qDebug("Settings loaded.");
+    loadSettings();
 }
-
-void SettingsManager::saveSettings(){
-    //Settings info
-    QApplication::setOrganizationName(ORG_NAME);
-    QApplication::setOrganizationDomain(ORG_DOMAIN);
-    QApplication::setApplicationName(APP_NAME);
-    QSettings qSettings;
-
-    //Application
-    qSettings.setValue(APPLICATION_START_AT_STARTUP, startAtStartup);
-    qSettings.setValue(APPLICATION_INDEXING_DONE_BEFORE, indexingDoneBefore);
-    qSettings.setValue(APPLICATION_ONLY_FILES, onlyFiles);
-
-    //Hotkey
-    qSettings.setValue(HOTKEY_SEARCH, hotKeySearch);
-
-    qDebug("Settings saved.");
-}
-
-void SettingsManager::updateStartupOption(bool startup){
-    SettingsManager::startAtStartup = startup;
-
-    if(startup){
-
-        //create autostart if not exists
-        if(!QDir(QDir::home().absolutePath().append("/.config/autostart/SearchEverything.desktop")).exists()){
-            QDir autostartFolder;
-            autostartFolder.mkdir((QDir::home().absolutePath().append("/.config/autostart")));
-        }
-
-        if(!QFile::copy("/usr/share/applications/SearchEverything.desktop", QDir::home().absolutePath().append("/.config/autostart/SearchEverything.desktop"))){
-            qWarning("@SettingsManager::updateStartupOption: Unable to copy shortcut file");
-        }
-    }else{
-        if(!QFile::remove(QDir::home().absolutePath().append("/.config/autostart/SearchEverything.desktop"))) {
-            qWarning("@SettingsManager::updateStartupOption: Unable to remove shortcut file");
-        }
-    }
-
-    saveSettings();
-}
-
-
-bool SettingsManager::isIndexingDoneBefore()
-{
-    return indexingDoneBefore;
-}
-
-bool SettingsManager::isOnlyFiles()
-{
-    return onlyFiles;
-}
-
-
-void SettingsManager::setIndexingDone(bool isDone)
-{
-    indexingDoneBefore = isDone;
-    saveSettings();
-}
-
-void SettingsManager::quitApplication()
-{
-    InotifyManager::stopWatching();
-    DatabaseManager::closeDb();
-    saveSettings();
-    releaseApplicationLock();
-}
-
 
 const char *SettingsManager::getDatabaseFileName()
 {
     return databaseFileName.toStdString().c_str();
 }
 
-
-void SettingsManager::setOnlyFiles(bool isOnlyFiles)
+QVariant SettingsManager::get(QString key)
 {
-    onlyFiles = isOnlyFiles;
-    saveSettings();
+    if( validateSettingKey(key) ){
+        return settingsContainer.value(key);
+    }
+    return QVariant();
+}
+
+void SettingsManager::set(QString key, QVariant value)
+{
+    if( validateSettingKey(key) ){
+        settingsContainer.insert(key, value);
+
+        /* Special settings to handle immediately */
+        if( key == "startAtStartup" ){
+            updateStartupOption( value.toBool() );
+        }
+
+        if( !isLoading ){
+            saveSettings();
+        }
+    }
 }
 
 bool SettingsManager::acquireApplicationLock()
@@ -177,3 +104,83 @@ bool SettingsManager::releaseApplicationLock()
     qDebug("@ApplicationManager::releaseApplicationLock: Removed lock file");
     return true;
 }
+
+//PUBLIC SLOT
+void SettingsManager::quitApplication()
+{
+    InotifyManager::stopWatching();
+    DatabaseManager::closeDb();
+    saveSettings();
+    releaseApplicationLock();
+}
+
+//PRIVATE METHODS
+void SettingsManager::loadSettings()
+{
+    //Settings info
+    QApplication::setOrganizationName(ORG_NAME);
+    QApplication::setOrganizationDomain(ORG_DOMAIN);
+    QApplication::setApplicationName(APP_NAME);
+
+    QSettings qSettings;
+
+    /* Must be set after settings info set */
+    databaseFileName = QDesktopServices::storageLocation(QDesktopServices::DataLocation).append(QDir::separator()).append("database");
+    qDebug() << "@SettingsManager::loadSettings: SearchEverything using" << databaseFileName << "as database";
+
+    /* Ensure the path exists */
+    QDir().mkpath( QDesktopServices::storageLocation(QDesktopServices::DataLocation) );
+
+    //Application settings
+    set("startAtStartup", qSettings.value(APPLICATION_START_AT_STARTUP, false ) );
+    set("indexingDoneBefore", qSettings.value(APPLICATION_INDEXING_DONE_BEFORE, false ) );
+    set("onlyFiles", qSettings.value(APPLICATION_ONLY_FILES, false ) );
+
+    isLoading = false;
+    qDebug("@SettingsManager::loadSettings: done.");
+}
+
+void SettingsManager::saveSettings(){
+    //Settings info
+    QApplication::setOrganizationName(ORG_NAME);
+    QApplication::setOrganizationDomain(ORG_DOMAIN);
+    QApplication::setApplicationName(APP_NAME);
+    QSettings qSettings;
+
+    //Application settings
+    qSettings.setValue(APPLICATION_START_AT_STARTUP, get("startAtStartup") );
+    qSettings.setValue(APPLICATION_INDEXING_DONE_BEFORE, get("indexingDoneBefore") );
+    qSettings.setValue(APPLICATION_ONLY_FILES, get("onlyFiles") );
+
+    qDebug("@SettingsManager::saveSettings: saved.");
+}
+
+void SettingsManager::updateStartupOption(bool startup){
+
+    if(startup){
+
+        //create autostart if not exists
+        if(!QDir(QDir::home().absolutePath().append("/.config/autostart/SearchEverything.desktop")).exists()){
+            QDir autostartFolder;
+            autostartFolder.mkdir((QDir::home().absolutePath().append("/.config/autostart")));
+        }
+
+        if(!QFile::copy("/usr/share/applications/SearchEverything.desktop", QDir::home().absolutePath().append("/.config/autostart/SearchEverything.desktop"))){
+            qWarning("@SettingsManager::updateStartupOption: Unable to copy shortcut file");
+        }
+    }else{
+        if(!QFile::remove(QDir::home().absolutePath().append("/.config/autostart/SearchEverything.desktop"))) {
+            qWarning("@SettingsManager::updateStartupOption: Unable to remove shortcut file");
+        }
+    }
+}
+
+bool SettingsManager::validateSettingKey(QString key)
+{
+    if(!definedSettings.contains(key)){
+        qCritical() << "SettingsManager::loadSettings: Invalid key:" << key;
+        throw std::exception();
+    }
+    return true;
+}
+

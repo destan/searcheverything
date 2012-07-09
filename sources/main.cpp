@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 
     a.connect(&a, SIGNAL(aboutToQuit()), SettingsManager::getInstance(), SLOT(quitApplication()));
 
-    SettingsManager::loadSettings();
+    SettingsManager::getInstance();
 
 
     if(QApplication::arguments().size() > 1){//first argument is the app name
@@ -78,11 +78,11 @@ int main(int argc, char *argv[])
     DatabaseManager::initDb();
     InotifyManager::initNotify();
 
-    if( !SettingsManager::isIndexingDoneBefore() ){
+    if( !SettingsManager::get("indexingDoneBefore").toBool() ){
         qDebug("@main: indexing file system...");
         splash.showMessage("indexing file system...", Qt::AlignBottom, Qt::gray);
         FileSystemIndexer::indexPath( QDir::homePath().toStdString().c_str() , 0);//FIXME: hardcode
-        SettingsManager::setIndexingDone(true);
+        SettingsManager::set("indexingDoneBefore", true);
     }
 
     QtConcurrent::run(InotifyManager::startWatching);

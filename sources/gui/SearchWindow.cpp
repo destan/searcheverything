@@ -70,7 +70,7 @@ SearchWindow::SearchWindow(QWidget *parent) : QMainWindow(parent),  ui(new Ui::S
     connect(openAction, SIGNAL( triggered() ), this, SLOT( handleOpenAction() ) );
     connect(showTrashAction, SIGNAL( triggered() ), this, SLOT( handleShowTrashActionAction() ) );
 
-    ui->checkBoxOnlyFiles->setChecked( SettingsManager::isOnlyFiles() );
+    ui->checkBoxOnlyFiles->setChecked( SettingsManager::get("onlyFiles").toBool() );
     ui->labelReindexingWait->hide();
     isAlive = true;
 }
@@ -123,7 +123,7 @@ void SearchWindow::triggerSearch()
 
     SearchWindow::searchKey = searchKey.trimmed();
 
-    if( SettingsManager::isOnlyFiles() ){
+    if( SettingsManager::get("onlyFiles").toBool() ){
         DatabaseManager::searchFiles(SearchWindow::searchKey.toStdString().c_str());
     }
     else{
@@ -210,7 +210,7 @@ void SearchWindow::updateResults(QStringList resultList)
 
 void SearchWindow::on_checkBoxOnlyFiles_toggled(bool checked)
 {
-    SettingsManager::setOnlyFiles(checked);
+    SettingsManager::set("onlyFiles", checked);
 }
 
 void SearchWindow::on_listView_doubleClicked(const QModelIndex &index)
@@ -229,7 +229,7 @@ void reindex(){
     InotifyManager::initNotify();
 
     FileSystemIndexer::indexPath( QDir::homePath().toStdString().c_str() , 0);//FIXME: hardcode
-    SettingsManager::setIndexingDone(true);
+    SettingsManager::set("indexingDoneBefore", true);
 }
 
 void SearchWindow::on_actionReindex_triggered()

@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     gui/SettingsWindow.cpp \
     core/FileSystemIndexer.cpp \
     core/DatabaseManager.cpp \
-    core/InotifyManager.cpp
+    core/InotifyManager.cpp \
+    gui/SelectableFileSystemModel.cpp
 
 HEADERS  += Utils.h \
     SettingsManager.h \
@@ -30,7 +31,8 @@ HEADERS  += Utils.h \
     gui/SettingsWindow.h \
     core/DatabaseManager.h \
     core/FileSystemIndexer.h \
-    core/InotifyManager.h
+    core/InotifyManager.h \
+    gui/SelectableFileSystemModel.h
 
 FORMS    += gui/SearchWindow.ui \
     gui/SettingsWindow.ui
