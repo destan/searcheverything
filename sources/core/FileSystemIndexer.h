@@ -29,6 +29,7 @@ class FileSystemIndexer
         static void indexPath(const char *name, int level);
 
         static bool isIndexingDoneBefore;
+        static void reindex();
     private:
         static int totalDirs;
         static int totalFiles;

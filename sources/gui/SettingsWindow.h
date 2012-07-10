@@ -41,9 +41,16 @@ class SettingsWindow : public QWidget
 
     private slots:
         void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+        void on_checkBoxStartup_toggled(bool checked);
+        void on_checkBoxOnlyFiles_toggled(bool checked);
+        void handleSelectedDirectoriesChanged(QStringList selectedDictionaries);
+
+        void on_pushButtonReindexNow_clicked();
 
     private:
         Ui::SettingsWindow *ui;
+
+        static QStringList selectedDirectories;
 };
 
 #endif // SETTINGSWINDOW_H

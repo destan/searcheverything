@@ -220,16 +220,7 @@ void SearchWindow::on_listView_doubleClicked(const QModelIndex &index)
 }
 
 void reindex(){
-    qDebug("@SearchWindow::reIndex: indexing file system...");
-    InotifyManager::stopWatching();
-    DatabaseManager::closeDb();
-    QFile::remove( SettingsManager::getDatabaseFileName() );
-
-    DatabaseManager::initDb();
-    InotifyManager::initNotify();
-
-    FileSystemIndexer::indexPath( QDir::homePath().toStdString().c_str() , 0);//FIXME: hardcode
-    SettingsManager::set("indexingDoneBefore", true);
+    FileSystemIndexer::reindex();
 }
 
 void SearchWindow::on_actionReindex_triggered()

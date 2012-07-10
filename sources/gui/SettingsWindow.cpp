@@ -19,10 +19,15 @@
 */
 
 #include <QFileSystemModel>
+#include <QDebug>
 
 #include "SettingsWindow.h"
 #include "ui_SettingsWindow.h"
 #include "SelectableFileSystemModel.h"
+#include "SettingsManager.h"
+#include "core/FileSystemIndexer.h"
+
+QStringList SettingsWindow::selectedDirectories;
 
 SettingsWindow::SettingsWindow(QWidget *parent) :
     QWidget(parent),
@@ -35,18 +40,38 @@ SettingsWindow::SettingsWindow(QWidget *parent) :
             SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)),
             this, SLOT(changePage(QListWidgetItem*,QListWidgetItem*)));
 
-    SelectableFileSystemModel *fsModel = new SelectableFileSystemModel;
+    /* Load selected directories from settings */
+    QStringList preSelectedDirectories;
+    foreach (QVariant item, SettingsManager::get("selectedDirectories").toList()) {
+        preSelectedDirectories << item.toString();
+    }
 
+    //FIXME: garbage collection? try to set this as parent
+    SelectableFileSystemModel *fsModel = new SelectableFileSystemModel(preSelectedDirectories);
     ui->treeViewFoldersToBeIndexed->setModel(fsModel);
 
     /* Set home as the default selected path */
     ui->treeViewFoldersToBeIndexed->setCurrentIndex( fsModel->index(QDir::homePath()) );
+
+    /* Hiding unused columns of file system tree */
     ui->treeViewFoldersToBeIndexed->hideColumn(1);//Size
     ui->treeViewFoldersToBeIndexed->hideColumn(2);//Type
     ui->treeViewFoldersToBeIndexed->hideColumn(3);//Date modified
 
     ui->treeViewFoldersToBeIndexed->setAnimated(true);
     ui->treeViewFoldersToBeIndexed->resizeColumnToContents(0);
+
+
+    /* Setting first page with first list item programmatically
+     * in case of forgatten wrong state on the .ui file
+     */
+    ui->listWidget->setCurrentRow(0);
+    ui->stackedWidget->setCurrentIndex(0);
+
+    /* Hide reindexing warning initially */
+    ui->widgetWarning->hide();
+
+    connect(fsModel, SIGNAL(selectedDirectoriesChanged(QStringList)), this, SLOT(handleSelectedDirectoriesChanged(QStringList)));
 }
 
 SettingsWindow::~SettingsWindow()
@@ -68,10 +93,47 @@ void SettingsWindow::changeEvent(QEvent *e)
 
 void SettingsWindow::changePage(QListWidgetItem *current, QListWidgetItem *previous)
 {
-
-    if (!current)
+    if (!current){
         current = previous;
-
+    }
     ui->stackedWidget->setCurrentIndex(ui->listWidget->row(current));
+}
 
+void SettingsWindow::on_checkBoxStartup_toggled(bool checked)
+{
+    SettingsManager::set("startAtStartup", checked);
+}
+
+void SettingsWindow::on_checkBoxOnlyFiles_toggled(bool checked)
+{
+    SettingsManager::set("onlyFiles", checked);
+}
+
+void SettingsWindow::handleSelectedDirectoriesChanged(QStringList givenSelectedDictionaries)
+{
+    QStringList existingList;
+    foreach (QVariant item, SettingsManager::get("selectedDirectories").toList()) {
+        existingList << item.toString();
+    }
+
+    existingList.sort();
+    givenSelectedDictionaries.sort();
+
+    if(givenSelectedDictionaries == existingList ){
+        ui->widgetWarning->hide();
+        selectedDirectories.clear();
+    }
+    else{
+        ui->widgetWarning->show();
+        selectedDirectories = givenSelectedDictionaries;
+    }
+}
+
+void SettingsWindow::on_pushButtonReindexNow_clicked()
+{
+    SettingsManager::set("selectedDirectories", selectedDirectories);
+    FileSystemIndexer::reindex();
+
+    ui->widgetWarning->hide();
+    selectedDirectories.clear();
 }

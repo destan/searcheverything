@@ -41,7 +41,8 @@ SettingsManager::SettingsManager(QObject *parent) : QObject(parent) {
     */
     definedSettings << "startAtStartup"             /* bool */
                     << "indexingDoneBefore"         /* bool */
-                    << "onlyFiles";                 /* bool */
+                    << "onlyFiles"                  /* bool */
+                    << "selectedDirectories";       /* QStringList */
 
     loadSettings();
 }
@@ -135,6 +136,7 @@ void SettingsManager::loadSettings()
     set("startAtStartup", qSettings.value(APPLICATION_START_AT_STARTUP, false ) );
     set("indexingDoneBefore", qSettings.value(APPLICATION_INDEXING_DONE_BEFORE, false ) );
     set("onlyFiles", qSettings.value(APPLICATION_ONLY_FILES, false ) );
+    set("selectedDirectories", qSettings.value(APPLICATION_SELECTED_DIRECTORIES, QStringList() ) );
 
     isLoading = false;
     qDebug("@SettingsManager::loadSettings: done.");
@@ -151,6 +153,7 @@ void SettingsManager::saveSettings(){
     qSettings.setValue(APPLICATION_START_AT_STARTUP, get("startAtStartup") );
     qSettings.setValue(APPLICATION_INDEXING_DONE_BEFORE, get("indexingDoneBefore") );
     qSettings.setValue(APPLICATION_ONLY_FILES, get("onlyFiles") );
+    qSettings.setValue(APPLICATION_SELECTED_DIRECTORIES, get("selectedDirectories") );
 
     qDebug("@SettingsManager::saveSettings: saved.");
 }

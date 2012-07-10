@@ -2,14 +2,20 @@
 
 #include <QDebug>
 
-QStringList SelectableFileSystemModel::selectedDirectories;
-
 SelectableFileSystemModel::SelectableFileSystemModel(QObject *parent) :
     QFileSystemModel(parent)
 {
     setReadOnly(true);
     setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
     setRootPath(QDir::homePath());
+}
+
+SelectableFileSystemModel::SelectableFileSystemModel(QStringList initiallySelectedDirectories, QObject *parent)
+{
+    setReadOnly(true);
+    setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
+    setRootPath(QDir::homePath());
+    selectedDirectories = initiallySelectedDirectories;
 }
 
 QVariant SelectableFileSystemModel::data(const QModelIndex& index, int role) const {
@@ -20,13 +26,17 @@ QVariant SelectableFileSystemModel::data(const QModelIndex& index, int role) con
         }
 
         foreach (QString selectedPath, selectedDirectories) {
+            /* Check if the item is a subdirectory of a selected directory */
             if(filePath(index).contains(QRegExp("^" + selectedPath))){
                 return Qt::Checked;
             }
         }
 
-        if(index.column() == 1){
-            return QVariant();
+        foreach (QString selectedPath, selectedDirectories) {
+            /* Check if the item has a subdirectory that is selected */
+            if(selectedPath.contains(filePath(index))){
+                return Qt::PartiallyChecked;
+            }
         }
 
         return Qt::Unchecked;
@@ -37,18 +47,18 @@ QVariant SelectableFileSystemModel::data(const QModelIndex& index, int role) con
 bool SelectableFileSystemModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     if (index.isValid() && index.column() == 0 && role == Qt::CheckStateRole) {
         if (value.toInt() == Qt::Checked) {
-
-            //CHECKED
+            //Item is checked so add to the list
             selectedDirectories.append(filePath(index));
-
-        } else {
-
-            //UNCHECKED
-            selectedDirectories.removeAll(filePath(index));
-
         }
+        else if(value.toInt() == Qt::Unchecked) {
+            //Item is unchecked so remove from the list
+            selectedDirectories.removeAll(filePath(index));
+        }
+        //ignore partially checked items
+
         emit dataChanged(index, index);
         emit layoutChanged();
+        emit selectedDirectoriesChanged(selectedDirectories);
 
         return true;
     }

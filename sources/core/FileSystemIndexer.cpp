@@ -27,10 +27,12 @@
 #include <stdio.h>
 
 #include <QDebug>
+#include <QDir>
 
 #include "FileSystemIndexer.h"
 #include "DatabaseManager.h"
 #include "InotifyManager.h"
+#include "SettingsManager.h"
 
 int FileSystemIndexer::totalDirs = 0;
 int FileSystemIndexer::totalFiles = 0;
@@ -77,4 +79,17 @@ void FileSystemIndexer::indexPath(const char* path, int level)
         }
     } while ( ( entry = readdir(dir) ) );
     closedir(dir);//being a good boy
+}
+
+void FileSystemIndexer::reindex(){
+    qDebug("@SearchWindow::reIndex: indexing file system...");
+    InotifyManager::stopWatching();
+    DatabaseManager::closeDb();
+    QFile::remove( SettingsManager::getDatabaseFileName() );
+
+    DatabaseManager::initDb();
+    InotifyManager::initNotify();
+
+    FileSystemIndexer::indexPath( QDir::homePath().toStdString().c_str() , 0);//FIXME: hardcode
+    SettingsManager::set("indexingDoneBefore", true);
 }

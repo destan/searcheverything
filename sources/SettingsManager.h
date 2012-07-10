@@ -28,6 +28,7 @@
 static const char APPLICATION_START_AT_STARTUP[] = "application/startAtStartup";
 static const char APPLICATION_INDEXING_DONE_BEFORE[] = "application/indexingDoneBefore";
 static const char APPLICATION_ONLY_FILES[] = "application/onlyFiles";
+static const char APPLICATION_SELECTED_DIRECTORIES[] = "application/selectedDirectories";
 
 /* Settings Information */
 static const char ORG_NAME[] = "DorukDestan";
@@ -51,6 +52,8 @@ class SettingsManager : public QObject
 
         static bool acquireApplicationLock();
         static bool releaseApplicationLock();
+
+        static QStringList getSelectedDirectories();
 
     public slots:
         void quitApplication();
