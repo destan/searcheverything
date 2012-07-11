@@ -57,7 +57,8 @@ SearchWindow::SearchWindow(QWidget *parent) : QMainWindow(parent),  ui(new Ui::S
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
 
-    ui->listView->setModel(pModel);
+    pModel->setHorizontalHeaderLabels(QStringList() << trUtf8("Name") << trUtf8("Path"));
+    ui->treeView->setModel(pModel);
 
     ui->statusBar->showMessage(trUtf8("Enter file or directory name"));
 
@@ -95,14 +96,18 @@ void SearchWindow::changeEvent(QEvent *e)
 void SearchWindow::closeEvent(QCloseEvent *event)
 {
     isAlive = false;
-    pModel->clear();
+//    pModel->clear();
+    pModel->removeRows(0, pModel->rowCount());
     event->accept();
 }
 
 void SearchWindow::on_lineEditSearch_textEdited(const QString &searchKey)
 {
     ui->statusBar->showMessage(trUtf8("Seaching..."));
-    pModel->clear();
+//    pModel->clear();
+    pModel->removeRows(0, pModel->rowCount());
+
+
     SearchWindow::searchKey = searchKey;
 
     if(!searchKey.isEmpty() && searchKey.length() > 1){
@@ -119,8 +124,6 @@ void SearchWindow::on_lineEditSearch_textEdited(const QString &searchKey)
 
 void SearchWindow::triggerSearch()
 {
-    qDebug("timeout");
-
     SearchWindow::searchKey = searchKey.trimmed();
 
     if( SettingsManager::get("onlyFiles").toBool() ){
@@ -132,15 +135,15 @@ void SearchWindow::triggerSearch()
     }
 
     static QString foundMessage = " item(s) found";
-    ui->statusBar->showMessage( QString::number( ui->listView->model()->rowCount() ).append(foundMessage) );
+    ui->statusBar->showMessage( QString::number( ui->treeView->model()->rowCount() ).append(foundMessage) );
 }
 
 void SearchWindow::showContextMenu(const QPoint &position)
 {
     QMenu contextMenu(trUtf8("Context menu"), this);
 
-    QMap<int, QVariant> resultMap = ui->listView->model()->itemData( ui->listView->currentIndex() );
-    QString fullPath = resultMap.value(Qt::DisplayRole).toString();
+    QMap<int, QVariant> resultMap = ui->treeView->model()->itemData( ui->treeView->currentIndex() );
+    QString fullPath = resultMap.value(Qt::UserRole + 1).toString();
 
     QFileInfo selectedItem(fullPath);
 
@@ -159,8 +162,8 @@ void SearchWindow::showContextMenu(const QPoint &position)
 
 void SearchWindow::handleShowInFolderAction()
 {
-    QMap<int, QVariant> resultMap = ui->listView->model()->itemData( ui->listView->currentIndex() );
-    QString fullPath = resultMap.value(Qt::DisplayRole).toString();
+    QMap<int, QVariant> resultMap = ui->treeView->model()->itemData( ui->treeView->currentIndex() );
+    QString fullPath = resultMap.value(Qt::UserRole + 1).toString();
 
     QString path = QString( Utils::getPath( fullPath.toStdString() ).c_str() );
 
@@ -169,8 +172,8 @@ void SearchWindow::handleShowInFolderAction()
 
 void SearchWindow::handleOpenAction()
 {
-    QMap<int, QVariant> resultMap = ui->listView->model()->itemData( ui->listView->currentIndex() );
-    QString fullPath = resultMap.value(Qt::DisplayRole).toString();
+    QMap<int, QVariant> resultMap = ui->treeView->model()->itemData( ui->treeView->currentIndex() );
+    QString fullPath = resultMap.value(Qt::UserRole + 1).toString();
 
     if(QFileInfo(fullPath).exists()){
         QDesktopServices::openUrl( QUrl("file:///" + fullPath) );
@@ -195,17 +198,25 @@ void SearchWindow::updateResults(QStringList resultList)
     static QIcon trashIcon(":/icons/trash.png");
 
     foreach (QString line, resultList) {
-        QStandardItem *item = new QStandardItem(line);
+        QStandardItem *item = new QStandardItem(line.split("/", QString::SkipEmptyParts).last());
+        item->setData(line);
         QIcon icon = iconProvider.icon( QFileInfo(line) );
 
         if(icon.isNull()){
             item->setIcon( trashIcon );
-        }else{
+        }
+        else{
             item->setIcon( icon );
         }
 
-        pModel->appendRow(item);
+        int rowCount = pModel->rowCount();
+        pModel->setItem(rowCount, item);
+        pModel->setItem(rowCount, 1, new QStandardItem(line));//append a column to the current row
+
+        /* Allow user interaction during search and partial loading of results*/
+        QApplication::processEvents();
     }
+    getInstance()->ui->treeView->resizeColumnToContents(0);
 }
 
 void SearchWindow::on_checkBoxOnlyFiles_toggled(bool checked)
@@ -213,7 +224,7 @@ void SearchWindow::on_checkBoxOnlyFiles_toggled(bool checked)
     SettingsManager::set("onlyFiles", checked);
 }
 
-void SearchWindow::on_listView_doubleClicked(const QModelIndex &index)
+void SearchWindow::on_treeView_doubleClicked(const QModelIndex &index)
 {
     Q_UNUSED(index)
     handleOpenAction();
@@ -233,7 +244,7 @@ void SearchWindow::on_actionReindex_triggered()
         return;
     }
 
-    ui->listView->hide();
+    ui->treeView->hide();
     ui->labelReindexingWait->show();
     ui->centralWidget->setEnabled(false);
     ui->menuBar->setEnabled(false);
@@ -249,7 +260,7 @@ void SearchWindow::on_actionReindex_triggered()
 }
 
 void SearchWindow::handleFinishedReindexing(){
-    ui->listView->show();
+    ui->treeView->show();
     ui->labelReindexingWait->hide();
     ui->centralWidget->setEnabled(true);
     ui->menuBar->setEnabled(true);

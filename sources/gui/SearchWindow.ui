@@ -67,18 +67,9 @@
      </widget>
     </item>
     <item>
-     <widget class="QListView" name="listView">
+     <widget class="QTreeView" name="treeView">
       <property name="editTriggers">
        <set>QAbstractItemView::NoEditTriggers</set>
-      </property>
-      <property name="iconSize">
-       <size>
-        <width>16</width>
-        <height>16</height>
-       </size>
-      </property>
-      <property name="uniformItemSizes">
-       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -133,7 +124,6 @@
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>
   <tabstop>lineEditSearch</tabstop>
-  <tabstop>listView</tabstop>
  </tabstops>
  <resources/>
  <connections>

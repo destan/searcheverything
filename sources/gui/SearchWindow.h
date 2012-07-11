@@ -50,6 +50,8 @@ class SearchWindow : public QMainWindow
 
         ~SearchWindow();
 
+    signals:
+        void resultsReady();
 
     protected:
         void changeEvent(QEvent *e);
@@ -66,8 +68,9 @@ class SearchWindow : public QMainWindow
         void handleFinishedReindexing();
 
         void on_checkBoxOnlyFiles_toggled(bool checked);
-        void on_listView_doubleClicked(const QModelIndex &index);
+        void on_treeView_doubleClicked(const QModelIndex &index);
         void on_actionReindex_triggered();
+
 
     private:
         explicit SearchWindow(QWidget *parent = 0);// Hide to ensure singleton pattern

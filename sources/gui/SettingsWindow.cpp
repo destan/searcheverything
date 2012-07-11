@@ -23,7 +23,6 @@
 
 #include "SettingsWindow.h"
 #include "ui_SettingsWindow.h"
-#include "SelectableFileSystemModel.h"
 #include "SettingsManager.h"
 #include "core/FileSystemIndexer.h"
 
@@ -44,7 +43,7 @@ SettingsWindow::SettingsWindow(QWidget *parent) :
     QStringList preSelectedDirectories = SettingsManager::getSelectedDirectories();
 
     //FIXME: garbage collection? try to set this as parent
-    SelectableFileSystemModel *fsModel = new SelectableFileSystemModel(preSelectedDirectories);
+    fsModel = new SelectableFileSystemModel(preSelectedDirectories);
     ui->treeViewFoldersToBeIndexed->setModel(fsModel);
 
     /* Set home as the default selected path */
@@ -68,6 +67,9 @@ SettingsWindow::SettingsWindow(QWidget *parent) :
     /* Hide reindexing warning initially */
     ui->widgetWarning->hide();
 
+    /* Set values of settings*/
+    ui->checkBoxOnlyFiles->setChecked(SettingsManager::get("onlyFiles").toBool());
+    ui->checkBoxStartup->setChecked(SettingsManager::get("startAtStartup").toBool());
     ui->lineEditInotifyLimit->setText(SettingsManager::getWatchLimit());
 
     connect(fsModel, SIGNAL(selectedDirectoriesChanged(QStringList)), this, SLOT(handleSelectedDirectoriesChanged(QStringList)));
@@ -78,8 +80,7 @@ SettingsWindow::~SettingsWindow()
     delete ui;
 }
 
-void SettingsWindow::changeEvent(QEvent *e)
-{
+void SettingsWindow::changeEvent(QEvent *e){
     QWidget::changeEvent(e);
     switch (e->type()) {
         case QEvent::LanguageChange:
@@ -90,28 +91,25 @@ void SettingsWindow::changeEvent(QEvent *e)
     }
 }
 
-void SettingsWindow::changePage(QListWidgetItem *current, QListWidgetItem *previous)
-{
+void SettingsWindow::changePage(QListWidgetItem *current, QListWidgetItem *previous){
     if (!current){
         current = previous;
     }
     ui->stackedWidget->setCurrentIndex(ui->listWidget->row(current));
 }
 
-void SettingsWindow::on_checkBoxStartup_toggled(bool checked)
-{
+void SettingsWindow::on_checkBoxStartup_toggled(bool checked){
     SettingsManager::set("startAtStartup", checked);
 }
 
-void SettingsWindow::on_checkBoxOnlyFiles_toggled(bool checked)
-{
+void SettingsWindow::on_checkBoxOnlyFiles_toggled(bool checked){
     SettingsManager::set("onlyFiles", checked);
 }
 
-void SettingsWindow::handleSelectedDirectoriesChanged(QStringList givenSelectedDictionaries)
-{
+void SettingsWindow::handleSelectedDirectoriesChanged(QStringList givenSelectedDictionaries){
     QStringList existingList = SettingsManager::getSelectedDirectories();
 
+    /* Sorting of selected directories list is only done here */
     existingList.sort();
     givenSelectedDictionaries.sort();
 
@@ -125,10 +123,12 @@ void SettingsWindow::handleSelectedDirectoriesChanged(QStringList givenSelectedD
     }
 }
 
-void SettingsWindow::on_pushButtonReindexNow_clicked()
-{
+void SettingsWindow::on_pushButtonReindexNow_clicked(){
     SettingsManager::set("selectedDirectories", selectedDirectories);
     FileSystemIndexer::reindex();
+
+    /* Reload file system list model*/
+    fsModel->setSelectedDirectories(SettingsManager::getSelectedDirectories());
 
     ui->widgetWarning->hide();
     selectedDirectories.clear();

@@ -24,6 +24,8 @@
 #include <QWidget>
 #include <QListWidgetItem>
 
+#include "SelectableFileSystemModel.h"
+
 namespace Ui {
 class SettingsWindow;
 }
@@ -50,6 +52,7 @@ class SettingsWindow : public QWidget
     private:
         Ui::SettingsWindow *ui;
 
+        SelectableFileSystemModel *fsModel;
         static QStringList selectedDirectories;
 };
 

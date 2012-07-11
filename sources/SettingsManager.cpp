@@ -70,6 +70,26 @@ void SettingsManager::set(QString key, QVariant value)
         if( key == "startAtStartup" ){
             updateStartupOption( value.toBool() );
         }
+        else if( key == "selectedDirectories" && !isLoading ){
+            QStringList filteredList;
+            /* since selectedDirectories is sorted it is guaranteed that
+              the first item is the most parent of all
+            */
+            QStringList selectedDirectories = getSelectedDirectories();
+            if(!selectedDirectories.empty()){
+                filteredList << selectedDirectories.first();
+            }
+
+            foreach (QString item, selectedDirectories) {
+                foreach (QString filteredItem, filteredList) {
+                    if( !item.contains(QRegExp("^" + filteredItem)) && !filteredList.contains(item) ) {
+                        filteredList << item;
+                    }
+                }
+            }
+
+            settingsContainer.insert("selectedDirectories", filteredList);
+        }
 
         if( !isLoading ){
             saveSettings();
@@ -151,17 +171,17 @@ void SettingsManager::loadSettings()
     QDir().mkpath( QDesktopServices::storageLocation(QDesktopServices::DataLocation) );
 
     //Application settings
-    set("startAtStartup", qSettings.value(APPLICATION_START_AT_STARTUP, false ) );
+    set("startAtStartup", qSettings.value(APPLICATION_START_AT_STARTUP, true ) );
     set("indexingDoneBefore", qSettings.value(APPLICATION_INDEXING_DONE_BEFORE, false ) );
-    set("onlyFiles", qSettings.value(APPLICATION_ONLY_FILES, false ) );
+    set("onlyFiles", qSettings.value(APPLICATION_ONLY_FILES, true ) );
     set("selectedDirectories", qSettings.value(APPLICATION_SELECTED_DIRECTORIES, QStringList() << QDir::homePath() ) );
 
     /* Getting iNotify watch limit */
     watchLimit = "unknown";
     QFile file("/proc/sys/fs/inotify/max_user_watches");
     if ( file.open(QIODevice::ReadOnly) ){
-            QByteArray line = file.readLine(); // we know it's 1-line
-            watchLimit = QString(line);
+        QByteArray line = file.readLine(); // we know it's 1-line
+        watchLimit = QString(line);
 
     }
 

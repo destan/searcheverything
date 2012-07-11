@@ -246,11 +246,12 @@ void DatabaseManager::clear()
     char *zErrMsg = 0;
     int rc;
 
-//    sqlite3_exec(db, "DROP TABLE IF EXISTS fs_folders;", NULL, NULL, &errorMessage);
-//    sqlite3_exec(db, "DROP TABLE IF EXISTS fs_index;", NULL, NULL, &errorMessage);
+    /* Removing the database file and then reinitializing the
+      databse over again is way more fast than DELETE FROM solution.
 
-//    sqlite3_exec(db, "CREATE VIRTUAL TABLE fs_index USING fts4(file_name TEXT, path TEXT, full_path TEXT);", NULL, NULL, &errorMessage);
-//    sqlite3_exec(db, "CREATE TABLE fs_folders (watch_id INTEGER, full_path TEXT);", NULL, NULL, &errorMessage);
+       Besides, after 'empty'ing the tables by DELETE FROM, the database file doesn't
+      shrinks. Don't know why.
+    */
     closeDb();
     QFile::remove( SettingsManager::getDatabaseFileName() );
     initDb();

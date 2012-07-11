@@ -18,6 +18,12 @@ SelectableFileSystemModel::SelectableFileSystemModel(QStringList initiallySelect
     selectedDirectories = initiallySelectedDirectories;
 }
 
+void SelectableFileSystemModel::setSelectedDirectories(QStringList list) {
+    selectedDirectories = list;
+    emit layoutChanged();
+    emit selectedDirectoriesChanged(selectedDirectories);
+}
+
 QVariant SelectableFileSystemModel::data(const QModelIndex& index, int role) const {
     if (index.isValid() && index.column() == 0 && role == Qt::CheckStateRole) {
 
