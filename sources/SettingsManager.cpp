@@ -31,6 +31,7 @@
 
 QString SettingsManager::databaseFileName;
 QStringList SettingsManager::definedSettings;
+QString SettingsManager::watchLimit;
 QVariantMap SettingsManager::settingsContainer;
 bool SettingsManager::isLoading = true;//true as default because settings start loading at the constructor
 
@@ -74,6 +75,23 @@ void SettingsManager::set(QString key, QVariant value)
             saveSettings();
         }
     }
+}
+
+QStringList SettingsManager::getSelectedDirectories()
+{
+    QStringList resultList;
+    QVariant sdVariant = SettingsManager::get("selectedDirectories");
+
+    if(sdVariant.type() == QVariant::String){
+        resultList << sdVariant.toString();
+    }
+    else if(sdVariant.type() == QVariant::StringList){
+        foreach (QVariant item, sdVariant.toList()) {
+            resultList << item.toString();
+        }
+    }
+
+    return resultList;
 }
 
 bool SettingsManager::acquireApplicationLock()
@@ -137,6 +155,15 @@ void SettingsManager::loadSettings()
     set("indexingDoneBefore", qSettings.value(APPLICATION_INDEXING_DONE_BEFORE, false ) );
     set("onlyFiles", qSettings.value(APPLICATION_ONLY_FILES, false ) );
     set("selectedDirectories", qSettings.value(APPLICATION_SELECTED_DIRECTORIES, QStringList() << QDir::homePath() ) );
+
+    /* Getting iNotify watch limit */
+    watchLimit = "unknown";
+    QFile file("/proc/sys/fs/inotify/max_user_watches");
+    if ( file.open(QIODevice::ReadOnly) ){
+            QByteArray line = file.readLine(); // we know it's 1-line
+            watchLimit = QString(line);
+
+    }
 
     isLoading = false;
     qDebug("@SettingsManager::loadSettings: done.");

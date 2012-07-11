@@ -84,7 +84,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="pageSettingsApllication">
       <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -149,12 +149,6 @@ Note that searching folders decreases the performance.</string>
        </item>
        <item>
         <widget class="QGroupBox" name="groupBox_6">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="toolTip">
-          <string>To be available in the future...</string>
-         </property>
          <property name="title">
           <string>iNotify Folder Watch Limit</string>
          </property>
@@ -163,13 +157,19 @@ Note that searching folders decreases the performance.</string>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
              <widget class="QLineEdit" name="lineEditInotifyLimit">
-              <property name="inputMask">
-               <string>0000000; </string>
+              <property name="readOnly">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="pushButton">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="toolTip">
+               <string>To be available in the future...</string>
+              </property>
               <property name="text">
                <string>Update Limit</string>
               </property>
@@ -193,7 +193,7 @@ Note that searching folders decreases the performance.</string>
           <item>
            <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>Requires super user privilages</string>
+             <string>This is the limit of possible watched directories.</string>
             </property>
             <property name="wordWrap">
              <bool>true</bool>

@@ -41,10 +41,7 @@ SettingsWindow::SettingsWindow(QWidget *parent) :
             this, SLOT(changePage(QListWidgetItem*,QListWidgetItem*)));
 
     /* Load selected directories from settings */
-    QStringList preSelectedDirectories;
-    foreach (QVariant item, SettingsManager::get("selectedDirectories").toList()) {
-        preSelectedDirectories << item.toString();
-    }
+    QStringList preSelectedDirectories = SettingsManager::getSelectedDirectories();
 
     //FIXME: garbage collection? try to set this as parent
     SelectableFileSystemModel *fsModel = new SelectableFileSystemModel(preSelectedDirectories);
@@ -70,6 +67,8 @@ SettingsWindow::SettingsWindow(QWidget *parent) :
 
     /* Hide reindexing warning initially */
     ui->widgetWarning->hide();
+
+    ui->lineEditInotifyLimit->setText(SettingsManager::getWatchLimit());
 
     connect(fsModel, SIGNAL(selectedDirectoriesChanged(QStringList)), this, SLOT(handleSelectedDirectoriesChanged(QStringList)));
 }
@@ -111,10 +110,7 @@ void SettingsWindow::on_checkBoxOnlyFiles_toggled(bool checked)
 
 void SettingsWindow::handleSelectedDirectoriesChanged(QStringList givenSelectedDictionaries)
 {
-    QStringList existingList;
-    foreach (QVariant item, SettingsManager::get("selectedDirectories").toList()) {
-        existingList << item.toString();
-    }
+    QStringList existingList = SettingsManager::getSelectedDirectories();
 
     existingList.sort();
     givenSelectedDictionaries.sort();

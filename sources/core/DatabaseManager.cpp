@@ -241,6 +241,27 @@ void DatabaseManager::searchFolders(std::string fullPath)
     }
 }
 
+void DatabaseManager::clear()
+{
+    char *zErrMsg = 0;
+    int rc;
+
+//    sqlite3_exec(db, "DROP TABLE IF EXISTS fs_folders;", NULL, NULL, &errorMessage);
+//    sqlite3_exec(db, "DROP TABLE IF EXISTS fs_index;", NULL, NULL, &errorMessage);
+
+//    sqlite3_exec(db, "CREATE VIRTUAL TABLE fs_index USING fts4(file_name TEXT, path TEXT, full_path TEXT);", NULL, NULL, &errorMessage);
+//    sqlite3_exec(db, "CREATE TABLE fs_folders (watch_id INTEGER, full_path TEXT);", NULL, NULL, &errorMessage);
+    closeDb();
+    QFile::remove( SettingsManager::getDatabaseFileName() );
+    initDb();
+
+    if( rc!=SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    }
+
+    qDebug("DatabaseManager::clear: done");
+}
 
 std::string DatabaseManager::getPathByWatchId(int watchId)
 {

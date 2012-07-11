@@ -90,6 +90,11 @@ void FileSystemIndexer::reindex(){
     DatabaseManager::initDb();
     InotifyManager::initNotify();
 
-    FileSystemIndexer::indexPath( QDir::homePath().toStdString().c_str() , 0);//FIXME: hardcode
+    DatabaseManager::clear();
+
+    foreach (QString selectedDirectory, SettingsManager::getSelectedDirectories()) {
+        FileSystemIndexer::indexPath( selectedDirectory.toStdString().c_str() , 0);
+    }
+
     SettingsManager::set("indexingDoneBefore", true);
 }

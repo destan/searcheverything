@@ -26,11 +26,11 @@
 class FileSystemIndexer
 {
     public:
-        static void indexPath(const char *name, int level);
-
         static bool isIndexingDoneBefore;
         static void reindex();
+
     private:
+        static void indexPath(const char *name, int level);
         static int totalDirs;
         static int totalFiles;
 };

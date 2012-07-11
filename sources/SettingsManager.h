@@ -49,11 +49,11 @@ class SettingsManager : public QObject
 
         static QVariant get(QString key);
         static void set(QString key, QVariant value);
+        static QStringList getSelectedDirectories();
+        static QString getWatchLimit(){return watchLimit;}
 
         static bool acquireApplicationLock();
         static bool releaseApplicationLock();
-
-        static QStringList getSelectedDirectories();
 
     public slots:
         void quitApplication();
@@ -79,6 +79,7 @@ class SettingsManager : public QObject
         */
         static QStringList definedSettings;
 
+        static QString watchLimit;
         static QString databaseFileName;
         static bool isLoading;
 };

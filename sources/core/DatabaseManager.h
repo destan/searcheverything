@@ -43,6 +43,8 @@ class DatabaseManager
         static void searchFiles(std::string fullPath);
         static void searchFolders(std::string fullPath);
 
+        static void clear();
+
     private:
         static sqlite3 *db;
 };

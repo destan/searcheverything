@@ -81,8 +81,7 @@ int main(int argc, char *argv[])
     if( !SettingsManager::get("indexingDoneBefore").toBool() ){
         qDebug("@main: indexing file system...");
         splash.showMessage("indexing file system...", Qt::AlignBottom, Qt::gray);
-        FileSystemIndexer::indexPath( QDir::homePath().toStdString().c_str() , 0);//FIXME: hardcode
-        SettingsManager::set("indexingDoneBefore", true);
+        FileSystemIndexer::reindex();
     }
 
     QtConcurrent::run(InotifyManager::startWatching);
