@@ -136,7 +136,7 @@ void SettingsManager::loadSettings()
     set("startAtStartup", qSettings.value(APPLICATION_START_AT_STARTUP, false ) );
     set("indexingDoneBefore", qSettings.value(APPLICATION_INDEXING_DONE_BEFORE, false ) );
     set("onlyFiles", qSettings.value(APPLICATION_ONLY_FILES, false ) );
-    set("selectedDirectories", qSettings.value(APPLICATION_SELECTED_DIRECTORIES, QStringList() ) );
+    set("selectedDirectories", qSettings.value(APPLICATION_SELECTED_DIRECTORIES, QStringList() << QDir::homePath() ) );
 
     isLoading = false;
     qDebug("@SettingsManager::loadSettings: done.");
