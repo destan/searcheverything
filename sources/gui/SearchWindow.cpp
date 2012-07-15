@@ -73,6 +73,8 @@ SearchWindow::SearchWindow(QWidget *parent) : QMainWindow(parent),  ui(new Ui::S
 
     ui->checkBoxOnlyFiles->setChecked( SettingsManager::get("onlyFiles").toBool() );
     ui->labelReindexingWait->hide();
+
+    Utils::centerWindow(this);
     isAlive = true;
 }
 

@@ -47,6 +47,8 @@ class DatabaseManager
 
     private:
         static sqlite3 *db;
+
+        static void executeQuery(const char *query, int (*callback)(void*,int,char**,char**) = 0, void *firstArgumentToCallback = 0);
 };
 
 #endif // DATABASEMANAGER_H

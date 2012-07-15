@@ -84,7 +84,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="pageSettingsApllication">
       <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -279,7 +279,11 @@ Note that searching folders decreases the performance.</string>
            <number>0</number>
           </property>
           <item>
-           <widget class="QTreeView" name="treeViewFoldersToBeIndexed"/>
+           <widget class="QTreeView" name="treeViewFoldersToBeIndexed">
+            <property name="expandsOnDoubleClick">
+             <bool>false</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

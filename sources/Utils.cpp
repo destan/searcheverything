@@ -19,8 +19,11 @@
 */
 
 
-#include <string>
 #include <QDebug>
+#include <QStyle>
+#include <QDesktopWidget>
+#include <string>
+
 #include "Utils.h"
 
 void Utils::replace(std::string &source, std::string oldValue, std::string newValue)
@@ -57,4 +60,10 @@ std::string Utils::getPath(const std::string &fullName)
         qCritical() << e.what() ;
         return "";
     }
+}
+
+void Utils::centerWindow(QWidget *window) {
+    QRect frect = window->frameGeometry();
+    frect.moveCenter(QDesktopWidget().availableGeometry().center());
+    window->move(frect.topLeft());
 }

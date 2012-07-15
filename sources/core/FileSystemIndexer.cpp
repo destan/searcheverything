@@ -18,7 +18,6 @@
     along with SearchEverything.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include <unistd.h>
 #include <sys/types.h>
 #include <dirent.h>
@@ -38,13 +37,12 @@ int FileSystemIndexer::totalDirs = 0;
 int FileSystemIndexer::totalFiles = 0;
 bool FileSystemIndexer::isIndexingDoneBefore = false;
 
-void addToWatch(const char* path){
+void addToWatch(const char* path) {
     int watchDescriptor = InotifyManager::addToWatch(path);
     DatabaseManager::addToWatchList(watchDescriptor, path);
 }
 
-void FileSystemIndexer::indexPath(const char* path, int level)
-{
+void FileSystemIndexer::indexPath(const char* path, int level) {
     DIR *dir;
     struct dirent *entry;
 
@@ -62,7 +60,7 @@ void FileSystemIndexer::indexPath(const char* path, int level)
     do {// traversing path's children
         if (entry->d_type == DT_DIR) {//is a directory
             char childPath[3000];//FIXME: make dynamic
-            int len = snprintf(childPath, sizeof(childPath)-1, "%s/%s", path, entry->d_name);
+            snprintf(childPath, sizeof(childPath)-1, "%s/%s", path, entry->d_name);
 
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0){
                 continue;
@@ -81,18 +79,15 @@ void FileSystemIndexer::indexPath(const char* path, int level)
     closedir(dir);//being a good boy
 }
 
-void FileSystemIndexer::reindex(){
-    qDebug("@SearchWindow::reIndex: indexing file system...");
+void FileSystemIndexer::reindex() {
+    qDebug("@SearchWindow::reIndex: reindexing file system...");
     InotifyManager::stopWatching();
-    DatabaseManager::closeDb();
-    QFile::remove( SettingsManager::getDatabaseFileName() );
-
-    DatabaseManager::initDb();
-    InotifyManager::initNotify();
 
     DatabaseManager::clear();
+    InotifyManager::initNotify();
 
     foreach (QString selectedDirectory, SettingsManager::getSelectedDirectories()) {
+        qDebug() << "@SearchWindow::reIndex: indexing" << selectedDirectory << "now";
         FileSystemIndexer::indexPath( selectedDirectory.toStdString().c_str() , 0);
     }
 

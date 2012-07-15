@@ -25,6 +25,7 @@
 #include "ui_SettingsWindow.h"
 #include "SettingsManager.h"
 #include "core/FileSystemIndexer.h"
+#include "Utils.h"
 
 QStringList SettingsWindow::selectedDirectories;
 
@@ -73,6 +74,8 @@ SettingsWindow::SettingsWindow(QWidget *parent) :
     ui->lineEditInotifyLimit->setText(SettingsManager::getWatchLimit());
 
     connect(fsModel, SIGNAL(selectedDirectoriesChanged(QStringList)), this, SLOT(handleSelectedDirectoriesChanged(QStringList)));
+
+    Utils::centerWindow(this);
 }
 
 SettingsWindow::~SettingsWindow()

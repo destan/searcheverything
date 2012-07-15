@@ -18,7 +18,6 @@
     along with SearchEverything.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include <algorithm>
 #include <sqlite3.h>
 #include <stdio.h>
@@ -33,50 +32,23 @@
 #include "InotifyManager.h"
 #include "SettingsManager.h"
 
-
 sqlite3 *DatabaseManager::db;
 char* errorMessage;
 
-static int callback(void *NotUsed, int argc, char **argv, char **azColName){
-    // int i;
-    // for(i=0; i<argc; i++){
-    //   printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    // }
-    // printf("\n");
-    return 0;
-}
+static int searchFilesCallback(void *firstArgument, int argc, char **argv, char **azColName) {
+    Q_UNUSED(azColName)
+    Q_UNUSED(firstArgument)
 
-static int searchFilesCallback(void *NotUsed, int argc, char **argv, char **azColName){
-    int i;
     QStringList resultList;
-    for(i=0; i<argc; i++){
-        //        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-        resultList.append(argv[i]);
+    for(int i = 0; i < argc; i++){
+        resultList.append( argv[i] );
     }
 
     SearchWindow::updateResults(resultList);
-
     return 0;
 }
 
-//static int getPathByWatchIdCallback(void *NotUsed, int argc, char **argv, char **azColName){
-//    int i;
-//    QStringList resultList;
-//    for(i=0; i<argc; i++){
-//        //        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-//        resultList.append(argv[i]);
-//    }
-
-//    SearchWindow::updateResults(resultList);
-
-//    return 0;
-//}
-
-void DatabaseManager::addToIndex(const char *p_fileName, const char *p_path, std::string fullPath)
-{
-    char *zErrMsg = 0;
-    int rc;
-
+void DatabaseManager::addToIndex(const char *p_fileName, const char *p_path, std::string fullPath) {
     std::string fileName(p_fileName);
     Utils::replace(fileName, "'", "''");
 
@@ -89,55 +61,24 @@ void DatabaseManager::addToIndex(const char *p_fileName, const char *p_path, std
 
     char query[queryLength];
 
-    int result = snprintf(query, sizeof(query)-1, "INSERT INTO fs_index(file_name, path, full_path) VALUES('%s', '%s', '%s');", fileName.c_str(), path.c_str(), fullPath.c_str());
-    rc = sqlite3_exec(db, query, callback, 0, &zErrMsg);
-
-    if( rc!=SQLITE_OK ){
-        fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        printf("Query: %s\n", query);
-        sqlite3_free(zErrMsg);
-    }
+    snprintf(query, sizeof(query)-1, "INSERT INTO fs_index(file_name, path, full_path) VALUES('%s', '%s', '%s');", fileName.c_str(), path.c_str(), fullPath.c_str());
+    executeQuery(query, 0);
 }
 
-void DatabaseManager::removeFromIndex(std::string fullPath)
-{
-    char *zErrMsg = 0;
-    int rc;
-
+void DatabaseManager::removeFromIndex(std::string fullPath) {
     Utils::replace(fullPath, "'", "''");
-
     std::string q = "DELETE FROM fs_index WHERE full_path='" + fullPath + "';";
-
-    rc = sqlite3_exec(db, q.c_str(), 0, 0, &zErrMsg);
-
-    if( rc!=SQLITE_OK ){
-        fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        printf("Query: %s\n", q.c_str());
-        sqlite3_free(zErrMsg);
-    }
+    executeQuery(q.c_str(), 0);
 }
 
 void DatabaseManager::addToWatchList(int watchId, const char *p_path)
 {
-    char *zErrMsg = 0;
-    int rc;
-
     std::string path(p_path);
     Utils::replace(path, "'", "''");
 
     //FIXME: optimize
-    std::string q = "INSERT INTO fs_folders(watch_id, full_path) VALUES(" + QString::number(watchId).toStdString() +", '" + path + "');";
-
-    //    char query[queryLength];
-
-    //    int result = snprintf(query, sizeof(query)-1, , watchId, fullPath.c_str());
-    rc = sqlite3_exec(db, q.c_str(), callback, 0, &zErrMsg);
-
-    if( rc!=SQLITE_OK ){
-        fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        printf("Query: %s\n", q.c_str());
-        sqlite3_free(zErrMsg);
-    }
+    std::string query = "INSERT INTO fs_folders(watch_id, full_path) VALUES(" + QString::number(watchId).toStdString() +", '" + path + "');";
+    executeQuery(query.c_str());
 }
 
 void DatabaseManager::removeFromWatchList(std::string fullPath)
@@ -174,7 +115,6 @@ void DatabaseManager::initDb()
     if( !SettingsManager::get("indexingDoneBefore").toBool() || !databaseCreatedBefore ){
         //Create databases
         sqlite3_exec(db, "CREATE VIRTUAL TABLE fs_index USING fts4(file_name TEXT, path TEXT, full_path TEXT);", NULL, NULL, &errorMessage);
-
         sqlite3_exec(db, "CREATE TABLE fs_folders (watch_id INTEGER, full_path TEXT);", NULL, NULL, &errorMessage);
 
         if( rc ){
@@ -183,6 +123,7 @@ void DatabaseManager::initDb()
             return ;
         }
         SettingsManager::set("indexingDoneBefore", false);
+        qDebug("@DatabaseManager::initDb: creating DBs");
     }
 
     // BEGIN TRANSACTION
@@ -209,88 +150,75 @@ void DatabaseManager::closeDb()
 }
 
 
-void DatabaseManager::searchFiles(std::string fullPath)
-{
-    char *zErrMsg = 0;
-    int rc;
-
+void DatabaseManager::searchFiles(std::string fullPath) {
     Utils::replace(fullPath, "'", "''");
     char query[ fullPath.length() + 57 ];
     snprintf(query, sizeof(query)-1, "SELECT full_path FROM fs_index WHERE file_name MATCH '%s';", fullPath.c_str());
 
-    rc = sqlite3_exec(db, query, searchFilesCallback, 0, &zErrMsg);
-    if( rc!=SQLITE_OK ){
-        fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-    }
+    executeQuery(query, searchFilesCallback);
 }
 
-void DatabaseManager::searchFolders(std::string fullPath)
-{
-    char *zErrMsg = 0;
-    int rc;
-
+void DatabaseManager::searchFolders(std::string fullPath) {
     Utils::replace(fullPath, "'", "''");
     char query[ fullPath.length() + 57 ];
     snprintf(query, sizeof(query)-1, "SELECT DISTINCT path FROM fs_index WHERE path MATCH '%s';", fullPath.c_str());
 
-    rc = sqlite3_exec(db, query, searchFilesCallback, 0, &zErrMsg);
-    if( rc!=SQLITE_OK ){
-        fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-    }
+    executeQuery(query, searchFilesCallback);
 }
 
-void DatabaseManager::clear()
-{
-    char *zErrMsg = 0;
-    int rc;
-
+void DatabaseManager::clear() {
     /* Removing the database file and then reinitializing the
-      databse over again is way more fast than DELETE FROM solution.
+      database over again is way more fast than DELETE FROM solution.
 
-       Besides, after 'empty'ing the tables by DELETE FROM, the database file doesn't
+       Besides, if I use other solution, after 'empty'ing the tables by DELETE FROM, the database file doesn't
       shrinks. Don't know why.
     */
     closeDb();
     QFile::remove( SettingsManager::getDatabaseFileName() );
     initDb();
 
-    if( rc!=SQLITE_OK ){
-        fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-    }
-
     qDebug("DatabaseManager::clear: done");
 }
 
-std::string DatabaseManager::getPathByWatchId(int watchId)
-{
+std::string DatabaseManager::getPathByWatchId(int watchId) {
     char query[50];
     int length = sprintf(query, "SELECT * FROM fs_folders where watch_id=%d", watchId);
     sqlite3_stmt * stmt;
 
     sqlite3_prepare_v2(db, query, length, & stmt, NULL);
-    int s = sqlite3_step (stmt);
+    int result = sqlite3_step (stmt);
 
-    if (s == SQLITE_ROW) {
+    if (result == SQLITE_ROW) {
         const unsigned char * text = sqlite3_column_text (stmt, 1);
+        sqlite3_finalize(stmt);
         return reinterpret_cast<const char*>(text);
     }
-    return "NO PATH";
+    sqlite3_finalize(stmt);
+    return "NO PATH";// FIXME: handle more elegantly
 }
 
-void DatabaseManager::bindToAllIndexedFolders()
-{
+void DatabaseManager::bindToAllIndexedFolders() {
     sqlite3_stmt * stmt;
     const char *sql = "SELECT distinct full_path FROM fs_folders";
     sqlite3_prepare_v2(db, sql, strlen (sql) + 1, & stmt, NULL);
-    int queryResult = sqlite3_step (stmt);
+    int result = sqlite3_step (stmt);
 
-    while (queryResult == SQLITE_ROW) {
+    while (result == SQLITE_ROW) {
         const unsigned char * text = sqlite3_column_text (stmt, 0);
         InotifyManager::addToWatch(reinterpret_cast<const char*>(text));
 
-        queryResult = sqlite3_step (stmt);
+        result = sqlite3_step (stmt);
+    }
+    sqlite3_finalize(stmt);
+}
+
+void DatabaseManager::executeQuery(const char *query, int (*callback)(void*,int,char**,char**), void *firstArgumentToCallback) {
+    char *zErrMsg = 0;
+    int result = sqlite3_exec(db, query, callback, firstArgumentToCallback, &zErrMsg);
+
+    if( result != SQLITE_OK ){
+        fprintf(stderr, "DatabaseManager::executeQuery: %s\n", zErrMsg);
+        fprintf(stderr, "DatabaseManager::executeQuery: Query: %s\n", query);
+        sqlite3_free(zErrMsg);
     }
 }
