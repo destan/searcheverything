@@ -6,3 +6,4 @@ script:
   - cd source
   - qmake SearchEverything.pro
   - make
+
