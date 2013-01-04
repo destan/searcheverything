@@ -1,3 +1,4 @@
+
 /*
     AUTHOR:
     Destan Sarpkaya - 2012
@@ -83,20 +84,9 @@ void DatabaseManager::addToWatchList(int watchId, const char *p_path)
 
 void DatabaseManager::removeFromWatchList(std::string fullPath)
 {
-    char *zErrMsg = 0;
-    int rc;
-
     Utils::replace(fullPath, "'", "''");
-
     std::string q = "DELETE FROM fs_folders WHERE full_path='" + fullPath + "';";
-
-    rc = sqlite3_exec(db, q.c_str(), 0, 0, &zErrMsg);
-
-    if( rc!=SQLITE_OK ){
-        fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        printf("Query: %s\n", q.c_str());
-        sqlite3_free(zErrMsg);
-    }
+    executeQuery(q.c_str());
 }
 
 void DatabaseManager::initDb()
@@ -107,13 +97,20 @@ void DatabaseManager::initDb()
 
     int rc = sqlite3_open(SettingsManager::getDatabaseFileName(), &db);
     if( rc ){
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        fprintf(stderr, "@DatabaseManager::initDb: Can't open database: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
-        return ;
+
+        return;
+        //FIXME: this is fatal, end the program!
+    }
+
+    if( databaseCreatedBefore && !checkTableExistence() ){
+        databaseCreatedBefore = false;
     }
 
     if( !SettingsManager::get("indexingDoneBefore").toBool() || !databaseCreatedBefore ){
         //Create databases
+        qDebug("@DatabaseManager::initDb: creating DBs");
         sqlite3_exec(db, "CREATE VIRTUAL TABLE fs_index USING fts4(file_name TEXT, path TEXT, full_path TEXT);", NULL, NULL, &errorMessage);
         sqlite3_exec(db, "CREATE TABLE fs_folders (watch_id INTEGER, full_path TEXT);", NULL, NULL, &errorMessage);
 
@@ -121,9 +118,9 @@ void DatabaseManager::initDb()
             fprintf(stderr, "Can't create database: %s\n", sqlite3_errmsg(db));
             sqlite3_close(db);
             return ;
+            //FIXME: this is fatal, end the program!
         }
         SettingsManager::set("indexingDoneBefore", false);
-        qDebug("@DatabaseManager::initDb: creating DBs");
     }
 
     // BEGIN TRANSACTION
@@ -221,4 +218,28 @@ void DatabaseManager::executeQuery(const char *query, int (*callback)(void*,int,
         fprintf(stderr, "DatabaseManager::executeQuery: Query: %s\n", query);
         sqlite3_free(zErrMsg);
     }
+}
+
+bool DatabaseManager::checkTableExistence() {
+    sqlite3_stmt * stmt;
+    const char *sql  = "SELECT count(*) FROM fs_folders";
+    const char *sql2 = "SELECT count(*) FROM fs_index";
+    int count, count2;
+    sqlite3_prepare_v2(db, sql, strlen (sql) + 1, & stmt, NULL);
+    int result = sqlite3_step (stmt);
+
+    if (result == SQLITE_ROW) {
+        count = sqlite3_column_int (stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+
+    sqlite3_prepare_v2(db, sql2, strlen (sql2) + 1, & stmt, NULL);
+    result = sqlite3_step (stmt);
+
+    if (result == SQLITE_ROW) {
+        count2 = sqlite3_column_int (stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+
+    return count > 0 && count2 > 0;
 }
